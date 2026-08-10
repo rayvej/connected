@@ -1,42 +1,49 @@
-import type { Contact, LogEntry, Platform, InteractionType } from './schema';
+import type { Contact, LogEntry, Category, Medium, FrequencyOption } from './schema';
 
-const STORAGE_KEY_CONTACTS = 'connected_pwa_contacts_v1';
-const STORAGE_KEY_LOGS = 'connected_pwa_logs_v1';
+const STORAGE_KEY_CONTACTS = 'connected_pwa_contacts_v2';
+const STORAGE_KEY_LOGS = 'connected_pwa_logs_v2';
+const STORAGE_KEY_CATEGORIES = 'connected_pwa_categories_v2';
 
-// Initial realistic seed contacts for immediate iOS trial
+const SEED_CATEGORIES: Category[] = [
+  { id: 'cat-1', name: 'Family' },
+  { id: 'cat-2', name: 'Close Friends' },
+  { id: 'cat-3', name: 'Work' },
+  { id: 'cat-4', name: 'Mentors' },
+];
+
 const SEED_CONTACTS: Contact[] = [
   {
     id: 'contact-1',
     name: 'Mom',
-    relationship: 'Family',
+    category: 'Family',
     phone: '+15550192834',
-    targetFrequencyDays: 7, // Every week
-    lastContactedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), // 3 days ago (Green)
-    lastPlatform: 'FaceTime',
-    notes: 'Loves gardening updates. Remind her about upcoming weekend lunch.',
+    targetFrequency: 'Weekly',
+    lastContactedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), // Yesterday
+    lastMedium: 'FaceTime',
+    notes: 'Loves garden updates. Remind her about upcoming weekend lunch.',
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   },
   {
     id: 'contact-2',
     name: 'Alex Rivera',
-    relationship: 'Best Friend',
+    category: 'Close Friends',
     phone: '+15550123984',
-    targetFrequencyDays: 14, // Every 2 weeks
-    lastContactedAt: new Date(Date.now() - 11 * 24 * 60 * 60 * 1000).toISOString(), // 11 days ago (Amber)
-    lastPlatform: 'iMessage',
-    notes: 'Recently changed jobs to Senior Product Manager. Ask how onboarding went.',
+    targetFrequency: 'Monthly',
+    lastContactedAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(), // 4 days ago
+    lastMedium: 'iMessage',
+    notes: 'Recently changed jobs to Senior PM. Asked about onboarding.',
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   },
   {
     id: 'contact-3',
     name: 'Uncle David',
-    relationship: 'Family',
+    category: 'Family',
     phone: '+15550182736',
-    targetFrequencyDays: 30, // Monthly
-    lastContactedAt: new Date(Date.now() - 42 * 24 * 60 * 60 * 1000).toISOString(), // 42 days ago (Red - Overdue!)
-    lastPlatform: 'Call',
+    targetFrequency: 'Quarterly',
+    lastContactedAt: new Date(Date.now() - 24 * 24 * 60 * 60 * 1000).toISOString(), // 24 days ago
+    lastMedium: 'Call',
     notes: 'Planning family reunion trip next summer.',
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
@@ -44,11 +51,11 @@ const SEED_CONTACTS: Contact[] = [
   {
     id: 'contact-4',
     name: 'Mei Chen',
-    relationship: 'College Friend',
+    category: 'Close Friends',
     phone: '+15550174829',
-    targetFrequencyDays: 14,
-    lastContactedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days ago (Green)
-    lastPlatform: 'WeChat',
+    targetFrequency: 'Monthly',
+    lastContactedAt: new Date(Date.now() - 40 * 24 * 60 * 60 * 1000).toISOString(), // 40 days ago
+    lastMedium: 'WeChat',
     notes: 'Traveling in Tokyo until end of month.',
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
@@ -60,36 +67,73 @@ const SEED_LOGS: LogEntry[] = [
     id: 'log-1',
     contactId: 'contact-1',
     contactName: 'Mom',
-    platform: 'FaceTime',
-    interactionType: 'Video',
-    occurredAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+    medium: 'FaceTime',
     summary: 'Had a quick 15-min catchup. Shared photos from Sunday park walk.',
+    occurredAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
     createdAt: new Date().toISOString(),
   },
   {
     id: 'log-2',
     contactId: 'contact-2',
     contactName: 'Alex Rivera',
-    platform: 'iMessage',
-    interactionType: 'Text',
-    occurredAt: new Date(Date.now() - 11 * 24 * 60 * 60 * 1000).toISOString(),
+    medium: 'iMessage',
     summary: 'Sent congrats message for new job role!',
+    occurredAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
     createdAt: new Date().toISOString(),
   }
 ];
 
 export class StorageService {
-  static getContacts(): Contact[] {
-    const raw = localStorage.getItem(STORAGE_KEY_CONTACTS);
+  // Categories
+  static getCategories(): Category[] {
+    const raw = localStorage.getItem(STORAGE_KEY_CATEGORIES);
     if (!raw) {
-      this.saveContacts(SEED_CONTACTS);
-      return SEED_CONTACTS;
+      this.saveCategories(SEED_CATEGORIES);
+      return SEED_CATEGORIES;
     }
     try {
       return JSON.parse(raw);
     } catch {
-      return SEED_CONTACTS;
+      return SEED_CATEGORIES;
     }
+  }
+
+  static saveCategories(categories: Category[]): void {
+    localStorage.setItem(STORAGE_KEY_CATEGORIES, JSON.stringify(categories));
+  }
+
+  static addCategory(name: string): Category {
+    const categories = this.getCategories();
+    const newCat: Category = {
+      id: `cat-${Date.now()}`,
+      name: name.trim(),
+    };
+    categories.push(newCat);
+    this.saveCategories(categories);
+    return newCat;
+  }
+
+  // Contacts
+  static getContacts(): Contact[] {
+    const raw = localStorage.getItem(STORAGE_KEY_CONTACTS);
+    let contacts: Contact[] = [];
+    if (!raw) {
+      contacts = SEED_CONTACTS;
+      this.saveContacts(contacts);
+    } else {
+      try {
+        contacts = JSON.parse(raw);
+      } catch {
+        contacts = SEED_CONTACTS;
+      }
+    }
+
+    // Sort strictly by recency: Most recent check-in at the top!
+    return contacts.sort((a, b) => {
+      const timeA = a.lastContactedAt ? new Date(a.lastContactedAt).getTime() : 0;
+      const timeB = b.lastContactedAt ? new Date(b.lastContactedAt).getTime() : 0;
+      return timeB - timeA;
+    });
   }
 
   static saveContacts(contacts: Contact[]): void {
@@ -128,6 +172,7 @@ export class StorageService {
     this.saveContacts(contacts);
   }
 
+  // Logs
   static getLogs(): LogEntry[] {
     const raw = localStorage.getItem(STORAGE_KEY_LOGS);
     if (!raw) {
@@ -148,8 +193,7 @@ export class StorageService {
   static addLog(logData: {
     contactId: string;
     contactName: string;
-    platform: Platform;
-    interactionType: InteractionType;
+    medium: Medium;
     summary?: string;
     occurredAt?: string;
   }): LogEntry {
@@ -159,9 +203,8 @@ export class StorageService {
       id: `log-${Date.now()}`,
       contactId: logData.contactId,
       contactName: logData.contactName,
-      platform: logData.platform,
-      interactionType: logData.interactionType,
-      summary: logData.summary || `Logged ${logData.interactionType} via ${logData.platform}`,
+      medium: logData.medium,
+      summary: logData.summary || `Logged ${logData.medium} conversation`,
       occurredAt,
       createdAt: new Date().toISOString(),
     };
@@ -169,10 +212,10 @@ export class StorageService {
     logs.unshift(newLog);
     this.saveLogs(logs);
 
-    // Automatically update the contact's lastContactedAt & lastPlatform!
+    // Update contact's lastContactedAt & lastMedium
     this.updateContact(logData.contactId, {
       lastContactedAt: occurredAt,
-      lastPlatform: logData.platform,
+      lastMedium: logData.medium,
     });
 
     return newLog;

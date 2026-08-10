@@ -1,109 +1,82 @@
-/* Apple Human Interface Guidelines (HIG) Token System for Connected */
+/* Connected — Reading Tracker Editorial Design Tokens */
 
 :root {
-  /* Typography Stack */
-  --font-ios: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "SF Pro", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --bg-solid: #0d0f14;
+  --bg-card: #161922;
+  --bg-card-secondary: #1c202c;
   
-  /* Light Mode Colors */
-  --ios-bg-base: #F2F2F7;
-  --ios-bg-grouped: #FFFFFF;
-  --ios-card-bg: #FFFFFF;
-  --ios-card-secondary: #F2F2F7;
-  --ios-card-border: rgba(0, 0, 0, 0.06);
-  --ios-header-blur-bg: rgba(249, 249, 249, 0.78);
-  
-  --ios-label-primary: #000000;
-  --ios-label-secondary: #8E8E93;
-  --ios-label-tertiary: #C7C7CC;
-  
-  /* System Accents & Recency Indicators */
-  --ios-blue: #007AFF;
-  --ios-blue-muted: rgba(0, 122, 255, 0.12);
-  --ios-green: #34C759;
-  --ios-green-muted: rgba(52, 199, 89, 0.15);
-  --ios-amber: #FF9500;
-  --ios-amber-muted: rgba(255, 149, 0, 0.15);
-  --ios-red: #FF3B30;
-  --ios-red-muted: rgba(255, 59, 48, 0.15);
-  --ios-purple: #AF52DE;
-  
-  /* Platform Specific Brand Tokens */
-  --platform-imessage: #007AFF;
-  --platform-whatsapp: #25D366;
-  --platform-wechat: #07C160;
-  --platform-facetime: #34C759;
-  --platform-phone: #30D158;
+  --border-color: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(212, 175, 55, 0.25);
+  --border-gold: rgba(212, 175, 55, 0.4);
 
-  /* Touch & Spring Physics */
-  --ease-ios-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  --ease-ios-smooth: cubic-bezier(0.25, 1, 0.5, 1);
-  --radius-ios-card: 16px;
-  --radius-ios-button: 12px;
-  --radius-ios-pill: 9999px;
-  --radius-ios-sheet: 24px;
-  
-  /* Blur Materials */
-  --backdrop-ios-blur: blur(25px) saturate(190%);
-  --shadow-ios-subtle: 0 4px 20px rgba(0, 0, 0, 0.05);
-  --shadow-ios-sheet: 0 -10px 40px rgba(0, 0, 0, 0.15);
+  --gold: #D4AF37;
+  --gold-rgb: 212, 175, 55;
+  --gold-muted: rgba(212, 175, 55, 0.12);
+  --gold-light: #F3E5AB;
+
+  --text-primary: #F8F9FA;
+  --text-secondary: #9DA3AE;
+  --text-tertiary: #6B7280;
+
+  --font-serif: "Playfair Display", "Newsreader", Georgia, serif;
+  --font-sans: "Outfit", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+
+  --radius-card: 18px;
+  --radius-button: 12px;
+  --radius-pill: 9999px;
+  --radius-sheet: 26px;
+
+  --shadow-gold: 0 10px 30px rgba(212, 175, 55, 0.15);
+  --backdrop-blur: blur(24px) saturate(180%);
 }
 
-/* Dark Mode Overrides */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --ios-bg-base: #000000;
-    --ios-bg-grouped: #1C1C1E;
-    --ios-card-bg: #1C1C1E;
-    --ios-card-secondary: #2C2C2E;
-    --ios-card-border: rgba(255, 255, 255, 0.08);
-    --ios-header-blur-bg: rgba(28, 28, 30, 0.75);
-    
-    --ios-label-primary: #FFFFFF;
-    --ios-label-secondary: #8E8E93;
-    --ios-label-tertiary: #48484A;
-    
-    --ios-blue-muted: rgba(10, 132, 255, 0.2);
-    --shadow-ios-subtle: 0 4px 25px rgba(0, 0, 0, 0.3);
-    --shadow-ios-sheet: 0 -10px 40px rgba(0, 0, 0, 0.5);
-  }
-}
-
-/* Base Reset & iOS Native Touch Standards */
+/* Base Reset */
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
-  font-family: var(--font-ios);
+  font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
   -webkit-tap-highlight-color: transparent;
-  user-select: none;
 }
 
 body {
-  background-color: var(--ios-bg-base);
-  color: var(--ios-label-primary);
+  background-color: var(--bg-solid);
+  color: var(--text-primary);
   min-height: 100vh;
   overflow-x: hidden;
-  touch-action: manipulation;
 }
 
-/* Enable text selection on inputs and notes */
-input, textarea, p, span, .selectable {
-  user-select: text;
+/* Ambient Floating Animation Keyframes */
+@keyframes float1 {
+  0%, 100% { transform: translate(0px, 0px) scale(1); }
+  50% { transform: translate(25px, -35px) scale(1.1); }
 }
 
-/* iOS Active Touch Physics Feedback */
+@keyframes float2 {
+  0%, 100% { transform: translate(0px, 0px) scale(1); }
+  50% { transform: translate(-30px, 25px) scale(1.08); }
+}
+
+.animate-float-1 {
+  animation: float1 14s ease-in-out infinite;
+}
+
+.animate-float-2 {
+  animation: float2 18s ease-in-out infinite;
+}
+
 .touch-active {
-  transition: transform 0.15s var(--ease-ios-smooth), opacity 0.15s ease;
+  transition: transform 0.15s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.15s ease;
 }
 
 .touch-active:active {
-  transform: scale(0.96);
+  transform: scale(0.97);
   opacity: 0.85;
 }
 
-/* Scrollbar customization for clean iOS feel */
+/* Scrollbar Customization */
 ::-webkit-scrollbar {
   width: 0px;
   height: 0px;

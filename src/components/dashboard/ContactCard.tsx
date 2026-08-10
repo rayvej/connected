@@ -1,14 +1,12 @@
 import React, { useState } from 'react';
-import type { Contact, Platform } from '../../db/schema';
-import { RecencyRing } from '../common/RecencyRing';
-import { RecencyBadge } from '../common/RecencyBadge';
-import { getPlatformBadgeStyle } from '../../utils/platformIcons';
-import { MessageCircle, Phone, ChevronRight } from 'lucide-react';
+import type { Contact, Medium } from '../../db/schema';
+import { formatRelativeTime } from '../../utils/dateUtils';
+import { MessageSquare, Phone, ChevronRight } from 'lucide-react';
 import '../../styles/glass.css';
 
 interface ContactCardProps {
   contact: Contact;
-  onQuickLog: (contact: Contact, platform: Platform) => void;
+  onQuickLog: (contact: Contact, medium: Medium) => void;
   onSelectContact: (contact: Contact) => void;
 }
 
@@ -28,28 +26,25 @@ export const ContactCard: React.FC<ContactCardProps> = ({
     if (touchStartX === null) return;
     const currentX = e.touches[0].clientX;
     const diff = currentX - touchStartX;
-    // Allow right swipe up to 140px
-    if (diff > 0 && diff < 160) {
+    if (diff > 0 && diff < 150) {
       setSwipeOffset(diff);
     }
   };
 
   const handleTouchEnd = () => {
-    if (swipeOffset > 80) {
-      setSwipeOffset(140); // Snap open swipe quick actions
+    if (swipeOffset > 75) {
+      setSwipeOffset(130);
     } else {
-      setSwipeOffset(0); // Reset
+      setSwipeOffset(0);
     }
     setTouchStartX(null);
   };
 
-  const platformBadgeStyle = getPlatformBadgeStyle(contact.lastPlatform);
-
   return (
-    <div className="relative overflow-hidden rounded-[16px] my-2 bg-[var(--ios-card-bg)] border border-[var(--ios-card-border)] shadow-sm">
-      {/* Revealed Swipe Quick Action Buttons (Left side reveal when swiped right) */}
+    <div className="relative overflow-hidden rounded-[18px] my-2 bg-[var(--bg-card)] border border-[var(--border-color)] transition-colors hover:border-[var(--border-strong)]">
+      {/* Swipe Quick Actions (Revealed on right-swipe) */}
       <div 
-        className="absolute inset-y-0 left-0 flex items-center bg-[var(--ios-blue-muted)] px-3 gap-2"
+        className="absolute inset-y-0 left-0 flex items-center bg-[var(--gold-muted)] px-3 gap-2"
         style={{ width: `${swipeOffset}px` }}
       >
         <button
@@ -57,10 +52,10 @@ export const ContactCard: React.FC<ContactCardProps> = ({
             onQuickLog(contact, 'iMessage');
             setSwipeOffset(0);
           }}
-          className="w-10 h-10 rounded-full bg-[var(--platform-imessage)] text-white flex items-center justify-center touch-active"
-          title="Quick iMessage Log"
+          className="w-9 h-9 rounded-full bg-[#007AFF] text-white flex items-center justify-center touch-active"
+          title="Quick iMessage"
         >
-          <MessageCircle size={18} />
+          <MessageSquare size={16} />
         </button>
 
         <button
@@ -68,14 +63,14 @@ export const ContactCard: React.FC<ContactCardProps> = ({
             onQuickLog(contact, 'Call');
             setSwipeOffset(0);
           }}
-          className="w-10 h-10 rounded-full bg-[var(--platform-phone)] text-white flex items-center justify-center touch-active"
-          title="Quick Call Log"
+          className="w-9 h-9 rounded-full bg-[#34C759] text-white flex items-center justify-center touch-active"
+          title="Quick Call"
         >
-          <Phone size={18} />
+          <Phone size={16} />
         </button>
       </div>
 
-      {/* Main Touch Card Body */}
+      {/* Main Editorial Card Body */}
       <div
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
@@ -87,52 +82,46 @@ export const ContactCard: React.FC<ContactCardProps> = ({
             onSelectContact(contact);
           }
         }}
-        className="glass-card p-3.5 flex items-center justify-between gap-3 touch-active cursor-pointer transition-transform duration-200"
+        className="p-4 cursor-pointer touch-active transition-transform duration-200"
         style={{ transform: `translateX(${swipeOffset}px)` }}
       >
-        {/* Avatar with Recency Ring */}
-        <RecencyRing
-          name={contact.name}
-          avatarUrl={contact.avatarUrl}
-          lastContactedAt={contact.lastContactedAt}
-          targetFrequencyDays={contact.targetFrequencyDays}
-          size={50}
-        />
-
-        {/* Details */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center justify-between">
-            <h3 className="text-[16px] font-semibold text-[var(--ios-label-primary)] truncate">
+        {/* Name and Recency Header */}
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <h3 className="text-[17px] font-serif font-bold text-[var(--gold)] truncate">
               {contact.name}
             </h3>
-            <RecencyBadge
-              lastContactedAt={contact.lastContactedAt}
-              targetFrequencyDays={contact.targetFrequencyDays}
-            />
-          </div>
-
-          <div className="flex items-center gap-2 mt-1">
-            <span className="text-[12px] font-medium text-[var(--ios-label-secondary)]">
-              {contact.relationship}
+            <span className="px-2 py-0.5 rounded-md text-[10px] font-mono font-semibold bg-[var(--bg-card-secondary)] text-[var(--text-secondary)] border border-[var(--border-color)]">
+              {contact.category || 'General'}
             </span>
-            {contact.lastPlatform && (
-              <span
-                className="px-2 py-0.5 rounded-full text-[10px] font-semibold"
-                style={platformBadgeStyle}
-              >
-                {contact.lastPlatform}
-              </span>
-            )}
           </div>
 
-          {contact.notes && (
-            <p className="text-[12px] text-[var(--ios-label-secondary)] truncate mt-1">
-              {contact.notes}
-            </p>
-          )}
+          <div className="flex items-center gap-1.5 flex-shrink-0 text-[11px] font-mono text-[var(--text-secondary)]">
+            <span>{formatRelativeTime(contact.lastContactedAt)}</span>
+            <ChevronRight size={15} className="text-[var(--text-tertiary)]" />
+          </div>
         </div>
 
-        <ChevronRight size={18} className="text-[var(--ios-label-tertiary)] flex-shrink-0" />
+        {/* Medium and Notes */}
+        <div className="mt-2 flex items-center justify-between gap-2 text-[12px]">
+          {contact.lastMedium ? (
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[rgba(212,175,55,0.1)] text-[var(--gold)] border border-[var(--border-strong)]">
+              Via {contact.lastMedium}
+            </span>
+          ) : (
+            <span className="text-[11px] text-[var(--text-tertiary)] italic">No medium logged</span>
+          )}
+
+          <span className="text-[11px] text-[var(--text-tertiary)] font-mono">
+            Target: {contact.targetFrequency}
+          </span>
+        </div>
+
+        {contact.notes && (
+          <p className="text-[12.5px] text-[var(--text-secondary)] mt-2 line-clamp-2 leading-relaxed selectable">
+            {contact.notes}
+          </p>
+        )}
       </div>
     </div>
   );

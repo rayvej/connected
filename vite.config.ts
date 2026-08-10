@@ -4,6 +4,7 @@ import tailwindcss from '@tailwindcss/vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig({
+  base: './', // Ensures GitHub Pages relative paths work on subpath URLs
   plugins: [
     react(),
     tailwindcss(),
@@ -18,8 +19,8 @@ export default defineConfig({
         background_color: '#000000',
         display: 'standalone',
         orientation: 'portrait',
-        scope: '/',
-        start_url: '/',
+        scope: './',
+        start_url: './',
         icons: [
           {
             src: 'pwa-192x192.png',
@@ -33,7 +34,7 @@ export default defineConfig({
           }
         ],
         share_target: {
-          action: '/?quicklog=true',
+          action: './?quicklog=true',
           method: 'GET',
           params: {
             title: 'contact',

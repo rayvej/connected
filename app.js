@@ -452,7 +452,6 @@ googleProvider.setCustomParameters({ prompt: 'select_account' });
     renderRecencyContacts();
     renderInsightsTab();
     renderMemoriesList();
-    renderWidgetPreview();
     checkDefaultPinWarning();
     updateShortcutUrlDisplay();
   }
@@ -708,29 +707,7 @@ googleProvider.setCustomParameters({ prompt: 'select_account' });
     container.innerHTML = html;
   }
 
-  function renderWidgetPreview() {
-    const container = document.getElementById('widget-contacts-preview');
-    if (!container) return;
 
-    const upcoming = state.contacts.slice(0, 3);
-    let html = '';
-
-    upcoming.forEach(c => {
-      const relTime = formatRelativeTime(c.lastContactedAt);
-      const snoozed = isContactSnoozed(c);
-      html += `
-        <div class="flex items-center justify-between p-2 rounded-xl bg-white/5 border border-white/10">
-          <div class="flex items-center gap-2">
-            <span class="w-2 h-2 rounded-full ${snoozed ? 'bg-amber-400' : 'bg-emerald-400'}"></span>
-            <span class="font-semibold text-[var(--text-primary)]">${c.name}</span>
-          </div>
-          <span class="text-[10px] text-[var(--gold)]">${snoozed ? '😴 Snoozed' : relTime}</span>
-        </div>
-      `;
-    });
-
-    container.innerHTML = html;
-  }
 
   // ── PERSON DOSSIER MODAL ──
   function openPersonDossierModal(contactId) {

@@ -15,6 +15,7 @@ import './styles/glass.css';
 export function App() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(true);
   const [activeTab, setActiveTab] = useState<TabType>('dashboard');
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(true);
 
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [logs, setLogs] = useState<LogEntry[]>([]);
@@ -34,6 +35,16 @@ export function App() {
   useEffect(() => {
     refreshData();
 
+    // Check saved theme preference
+    const savedTheme = localStorage.getItem('connected_theme_mode');
+    if (savedTheme === 'light') {
+      setIsDarkMode(false);
+      document.documentElement.setAttribute('data-mode', 'light');
+    } else {
+      setIsDarkMode(true);
+      document.documentElement.setAttribute('data-mode', 'dark');
+    }
+
     // Shortcut parser (e.g. ?quicklog=true&contact=Mom&medium=iMessage)
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('quicklog') === 'true' || urlParams.get('quicklog') === '1') {
@@ -47,6 +58,13 @@ export function App() {
       setIsQuickLogOpen(true);
     }
   }, []);
+
+  const toggleTheme = () => {
+    const nextMode = !isDarkMode;
+    setIsDarkMode(nextMode);
+    document.documentElement.setAttribute('data-mode', nextMode ? 'dark' : 'light');
+    localStorage.setItem('connected_theme_mode', nextMode ? 'dark' : 'light');
+  };
 
   const refreshData = () => {
     setContacts(StorageService.getContacts());
@@ -97,7 +115,7 @@ export function App() {
     refreshData();
   };
 
-  // Filtered Contacts (Option C: Top Search Bar + Recency Sorting)
+  // Filtered Contacts
   const filteredContacts = contacts.filter((c) => {
     const matchesSearch =
       c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -115,18 +133,21 @@ export function App() {
   }
 
   return (
-    <div className="w-full min-h-screen bg-[#0d0b0a] text-[var(--text-primary)] relative flex justify-center">
+    <div className="w-full min-h-screen relative flex justify-center" style={{ background: 'var(--bg-solid)' }}>
       <div className="frosted-bg-overlay" />
 
-      {/* Ambient background glow blobs (Reading Tracker style) */}
-      <div className="fixed inset-0 pointer-events-none z-[-2] overflow-hidden opacity-50">
-        <div className="absolute -top-24 -left-24 w-[280px] h-[280px] rounded-full bg-amber-500/12 blur-[120px] animate-float-1" />
-        <div className="absolute top-[45%] -right-12 w-[240px] h-[240px] rounded-full bg-rose-600/10 blur-[120px] animate-float-2" />
+      {/* Ambient background glow blobs */}
+      <div className="fixed inset-0 pointer-events-none z-[-2] overflow-hidden opacity-60">
+        <div className="absolute -top-24 -left-24 w-[280px] h-[280px] rounded-full bg-orange-500/12 blur-[120px] animate-float-1" />
+        <div className="absolute top-[40%] right-12 w-[240px] h-[240px] rounded-full bg-rose-600/10 blur-[120px] animate-float-2" />
         <div className="absolute -bottom-24 left-[5%] w-[260px] h-[260px] rounded-full bg-amber-500/8 blur-[120px] animate-float-1" />
       </div>
 
       {/* Reading Tracker Mobile Handset Container (max-w-[448px] centered on Desktop) */}
-      <div className="relative z-10 flex flex-col min-h-screen w-full max-w-[448px] border-x border-[var(--border)] bg-[#181412] shadow-2xl overflow-x-hidden">
+      <div 
+        className="relative z-10 flex flex-col h-screen h-[100dvh] w-full max-w-[448px] border-x shadow-2xl overflow-hidden"
+        style={{ background: 'var(--bg-solid)', borderColor: 'var(--border)' }}
+      >
         {/* Header */}
         <HeaderBlur
           searchQuery={searchQuery}
@@ -138,16 +159,18 @@ export function App() {
             setEditingContact(null);
             setIsContactFormOpen(true);
           }}
+          isDarkMode={isDarkMode}
+          onToggleTheme={toggleTheme}
         />
 
-        {/* Main View Area */}
-        <main className="px-4 pt-3 flex-1">
+        {/* Scrollable View Area */}
+        <main className="flex-1 overflow-y-auto no-scrollbar p-4">
           {/* 1. RECENCY DASHBOARD TAB */}
           {activeTab === 'dashboard' && (
-            <div className="space-y-3 pb-24">
+            <div className="space-y-3 pb-8">
               <div className="flex items-center justify-between px-1">
                 <h2 
-                  className="text-[14px] font-bold uppercase tracking-wider"
+                  className="text-[13px] font-bold uppercase tracking-wider"
                   style={{ fontFamily: 'var(--font-header)', color: 'var(--gold)' }}
                 >
                   Check-In Recency ({filteredContacts.length})
@@ -191,7 +214,7 @@ export function App() {
           {activeTab === 'shortcuts' && <ShortcutsView />}
         </main>
 
-        {/* Bottom Glass Navigation Bar */}
+        {/* Bottom Glass Navigation Bar (Strictly inside 448px container) */}
         <TabBar
           activeTab={activeTab}
           onSelectTab={setActiveTab}

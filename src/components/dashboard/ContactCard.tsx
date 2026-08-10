@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import type { Contact, Medium } from '../../db/schema';
 import { formatRelativeTime } from '../../utils/dateUtils';
-import { MessageSquare, Phone, ChevronRight } from 'lucide-react';
 import '../../styles/glass.css';
 
 interface ContactCardProps {
@@ -40,35 +39,49 @@ export const ContactCard: React.FC<ContactCardProps> = ({
     setTouchStartX(null);
   };
 
-  return (
-    <div className="relative overflow-hidden rounded-[18px] my-2.5 bg-[var(--bg-card)] border border-[var(--border)] shadow-md transition-all hover:border-[var(--border-strong)]">
-      {/* Revealed Swipe Quick Action Buttons */}
-      <div 
-        className="absolute inset-y-0 left-0 flex items-center bg-[rgba(212,163,89,0.15)] px-3 gap-2 border-r border-[var(--border-strong)]"
-        style={{ width: `${swipeOffset}px` }}
-      >
-        <button
-          onClick={() => {
-            onQuickLog(contact, 'iMessage');
-            setSwipeOffset(0);
-          }}
-          className="w-9 h-9 rounded-full bg-[#007AFF] text-white flex items-center justify-center touch-active shadow-sm"
-          title="Quick iMessage"
-        >
-          <MessageSquare size={16} />
-        </button>
+  const getMediumIcon = (medium?: Medium) => {
+    switch (medium) {
+      case 'iMessage': return 'fa-comment';
+      case 'Call': return 'fa-phone';
+      case 'FaceTime': return 'fa-video';
+      case 'WhatsApp': return 'fa-message';
+      case 'WeChat': return 'fa-[#07C160] fa-comments';
+      case 'In-Person': return 'fa-user-group';
+      default: return 'fa-comment';
+    }
+  };
 
-        <button
-          onClick={() => {
-            onQuickLog(contact, 'Call');
-            setSwipeOffset(0);
-          }}
-          className="w-9 h-9 rounded-full bg-[#34C759] text-white flex items-center justify-center touch-active shadow-sm"
-          title="Quick Call"
+  return (
+    <div className="relative overflow-hidden rounded-[16px] my-2.5 bg-[var(--bg-card)] border border-[var(--border)] shadow-md transition-all hover:border-[var(--border-strong)]">
+      {/* Revealed Swipe Quick Action Overlay */}
+      {swipeOffset > 0 && (
+        <div 
+          className="absolute inset-y-0 left-0 flex items-center bg-[rgba(var(--gold-rgb),0.15)] px-3 gap-2 border-r border-[var(--border-strong)] z-20"
+          style={{ width: `${swipeOffset}px` }}
         >
-          <Phone size={16} />
-        </button>
-      </div>
+          <button
+            onClick={() => {
+              onQuickLog(contact, 'iMessage');
+              setSwipeOffset(0);
+            }}
+            className="w-9 h-9 rounded-full bg-[#007AFF] text-white flex items-center justify-center touch-active shadow-sm"
+            title="Quick iMessage"
+          >
+            <i className="fa-solid fa-comment text-sm" />
+          </button>
+
+          <button
+            onClick={() => {
+              onQuickLog(contact, 'Call');
+              setSwipeOffset(0);
+            }}
+            className="w-9 h-9 rounded-full bg-[#34C759] text-white flex items-center justify-center touch-active shadow-sm"
+            title="Quick Call"
+          >
+            <i className="fa-solid fa-phone text-sm" />
+          </button>
+        </div>
+      )}
 
       {/* Main Touch Card Body */}
       <div
@@ -89,7 +102,7 @@ export const ContactCard: React.FC<ContactCardProps> = ({
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0">
             <h3 
-              className="text-[18px] font-bold tracking-tight truncate"
+              className="text-[17.5px] font-bold tracking-tight truncate"
               style={{ fontFamily: 'var(--font-header)', color: 'var(--gold)' }}
             >
               {contact.name}
@@ -104,15 +117,16 @@ export const ContactCard: React.FC<ContactCardProps> = ({
 
           <div className="flex items-center gap-1 flex-shrink-0 text-[11px] font-mono text-[var(--text-secondary)]">
             <span>{formatRelativeTime(contact.lastContactedAt)}</span>
-            <ChevronRight size={14} className="text-[var(--text-tertiary)]" />
+            <i className="fa-solid fa-chevron-right text-[10px] text-[var(--text-tertiary)]" />
           </div>
         </div>
 
-        {/* Medium & Frequency Info */}
+        {/* Medium & Target Info */}
         <div className="mt-2.5 flex items-center justify-between gap-2">
           {contact.lastMedium ? (
             <span className="medium-badge">
-              Via {contact.lastMedium}
+              <i className={`fa-solid ${getMediumIcon(contact.lastMedium)} text-[10px]`} />
+              <span>Via {contact.lastMedium}</span>
             </span>
           ) : (
             <span className="text-[11px] text-[var(--text-tertiary)] italic">No medium logged</span>
@@ -123,7 +137,7 @@ export const ContactCard: React.FC<ContactCardProps> = ({
           </span>
         </div>
 
-        {/* Memory Note Snippet */}
+        {/* Memory Note Preview */}
         {contact.notes && (
           <p className="text-[13px] text-[var(--text-secondary)] mt-2 line-clamp-2 leading-relaxed selectable">
             {contact.notes}

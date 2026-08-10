@@ -27,7 +27,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
 
   <!-- Custom HIG Design System -->
-  <link rel="stylesheet" href="style.css?v=202">
+  <link rel="stylesheet" href="style.css?v=203">
 </head>
 
 <body class="min-h-screen overflow-hidden relative flex justify-center" style="background-color: #0d0b0a;">
@@ -49,18 +49,15 @@
     <!-- ── SCREEN 1: GOOGLE SIGN-IN (Reading Tracker Style) ── -->
     <div id="auth-screen" class="absolute inset-0 z-50 flex flex-col items-center justify-center p-8 hidden" style="background: var(--bg-solid); opacity: 0.98; backdrop-filter: blur(28px)">
       <div class="w-full max-w-xs flex flex-col items-center gap-8 text-center animate-fade-in">
-        <!-- Logo Halo -->
         <div class="relative group">
           <div class="absolute -inset-3 rounded-[32px] opacity-40 blur-2xl transition-opacity duration-1000 group-hover:opacity-75"
                style="background: radial-gradient(circle, rgba(var(--gold-rgb), 0.5) 0%, rgba(200,109,81,0.3) 100%)"></div>
           <img src="app-logo.jpg" class="relative w-28 h-28 rounded-[26px] shadow-2xl border object-cover" style="border-color: var(--border-strong)" alt="Connected Logo">
         </div>
-        <!-- Title -->
         <div class="flex flex-col gap-2">
           <h1 class="text-3xl font-bold tracking-tight" style="font-family: var(--font-header); color: var(--gold)">Connected</h1>
           <p style="color: var(--text-secondary); font-size: 14px; font-weight: 500">Your private touchpoints &amp; memory log</p>
         </div>
-        <!-- Google Sign-In Button -->
         <button id="btn-google-signin"
           class="flex items-center gap-3 w-full justify-center px-6 py-4 rounded-2xl font-semibold text-sm border transition-all active:scale-[0.98] shadow-lg touch-active"
           style="background: var(--bg-card); border-color: var(--border-strong); color: var(--text-primary); backdrop-filter: blur(20px)">
@@ -75,14 +72,13 @@
       </div>
     </div>
 
-    <!-- ── SCREEN 2: 4-DIGIT SECURITY PIN (Reading Tracker Style) ── -->
+    <!-- ── SCREEN 2: 4-DIGIT SECURITY PIN ── -->
     <div id="pin-screen" class="absolute inset-0 z-50 flex flex-col items-center justify-center p-8 hidden" style="background: var(--bg-solid); opacity: 0.98; backdrop-filter: blur(28px)">
       <div class="w-full max-w-xs flex flex-col items-center gap-7 text-center">
         <div class="flex flex-col items-center gap-3">
           <img src="app-logo.jpg" class="w-16 h-16 rounded-2xl shadow-xl border object-cover" style="border-color: var(--border-strong)" alt="Logo">
           <h2 id="pin-screen-title" class="text-xl font-bold" style="color: var(--text-primary); font-family: var(--font-header)">Enter Security PIN</h2>
         </div>
-        <!-- PIN dots -->
         <div class="flex gap-5 my-1" id="pin-dots">
           <span class="pin-dot w-4 h-4 rounded-full border-2 transition-all duration-200" style="border-color: var(--border-strong)"></span>
           <span class="pin-dot w-4 h-4 rounded-full border-2 transition-all duration-200" style="border-color: var(--border-strong)"></span>
@@ -92,7 +88,6 @@
         <p class="text-xs font-semibold text-rose-400 h-5 hidden transition-opacity duration-200" id="pin-error" aria-live="assertive">Incorrect PIN — try again</p>
         <p id="pin-screen-subtitle" class="text-xs font-medium text-[var(--text-secondary)] -mt-2">Default Security PIN: <span class="font-mono font-bold text-[var(--gold)]">1234</span></p>
 
-        <!-- Number pad -->
         <div class="grid grid-cols-3 gap-4 w-64 justify-items-center" id="pin-pad">
           <button class="pin-key w-16 h-16 rounded-full text-2xl font-medium flex items-center justify-center hover:bg-white/10 active:scale-90 text-[var(--text-primary)] border border-[var(--border)]" data-key="1">1</button>
           <button class="pin-key w-16 h-16 rounded-full text-2xl font-medium flex items-center justify-center hover:bg-white/10 active:scale-90 text-[var(--text-primary)] border border-[var(--border)]" data-key="2">2</button>
@@ -112,7 +107,6 @@
 
     <!-- ── HEADER BLUR BAR ── -->
     <header class="glass-header px-4 pt-3.5 pb-3 space-y-3 shrink-0 relative z-30">
-      <!-- Title & Controls Row -->
       <div class="flex items-center justify-between gap-2">
         <div class="flex items-center gap-2.5 min-w-0">
           <img src="app-logo.jpg" alt="Logo" class="w-8 h-8 rounded-xl object-cover border" style="border-color: var(--border-strong);">
@@ -122,12 +116,10 @@
         </div>
 
         <div class="flex items-center gap-2 shrink-0">
-          <!-- Sun/Moon Theme Toggle -->
           <button id="btn-theme-toggle" class="w-8 h-8 rounded-full flex items-center justify-center touch-active text-[13px] border" style="background: var(--bg-input); border-color: var(--border-strong); color: var(--text-secondary)" title="Toggle Light/Dark mode">
             <i class="fa-solid fa-moon" id="theme-icon"></i>
           </button>
 
-          <!-- Add Person Button -->
           <button id="btn-open-add-contact" class="px-3 py-1.5 rounded-full font-semibold text-[12px] flex items-center gap-1.5 touch-active" style="background: rgba(var(--gold-rgb), 0.15); color: var(--gold); border: 1px solid var(--border-strong)">
             <i class="fa-solid fa-plus text-[11px]"></i>
             <span>Add Person</span>
@@ -135,15 +127,13 @@
         </div>
       </div>
 
-      <!-- Search Bar (Option C) -->
       <div class="relative">
         <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-[12px] text-[var(--text-tertiary)]"></i>
         <input type="text" id="search-input" placeholder="Search people, groups, notes..." class="w-full pl-9 pr-3.5 py-2 rounded-xl text-[13.5px] outline-none transition-all" style="background: var(--bg-input); border: 1px solid var(--border); color: var(--text-primary)">
       </div>
 
-      <!-- Category Filter Pills -->
       <div class="flex gap-2 overflow-x-auto pb-0.5 no-scrollbar" id="category-pills-container">
-        <!-- Injected dynamically via app.js -->
+        <!-- Injected dynamically -->
       </div>
     </header>
 
@@ -166,7 +156,44 @@
         </div>
       </section>
 
-      <!-- VIEW 2: MEMORIES HISTORY LOG -->
+      <!-- VIEW 2: INSIGHTS & ANALYTICS (NEW TAB 2) -->
+      <section id="view-insights" class="space-y-4 pb-8 hidden">
+        <!-- Touchpoint Streak Card -->
+        <div class="glass-card p-4 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl" style="background: rgba(var(--gold-rgb),0.15); color: var(--gold)">
+              🔥
+            </div>
+            <div>
+              <span class="text-[11px] font-mono uppercase tracking-wider text-[var(--text-tertiary)] block">Touchpoint Consistency</span>
+              <h3 className="text-[20px] font-bold" style="font-family: var(--font-header); color: var(--gold)" id="insights-streak-title">4 Week Streak</h3>
+            </div>
+          </div>
+          <span class="text-[12px] font-mono font-semibold px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">Active</span>
+        </div>
+
+        <!-- Relationship Balance Matrix -->
+        <div class="glass-card p-4 space-y-3">
+          <h3 class="text-[15px] font-bold text-[var(--gold)]" style="font-family: var(--font-header)">Relationship Balance Matrix</h3>
+          <p class="text-[12px] text-[var(--text-secondary)]">Distribution of check-in touchpoints across your groups:</p>
+          <div class="space-y-2.5 pt-1" id="insights-matrix-container">
+            <!-- Injected dynamically via app.js -->
+          </div>
+        </div>
+
+        <!-- Upcoming Birthdays & Milestones Card -->
+        <div class="glass-card p-4 space-y-2.5">
+          <div class="flex items-center gap-2 text-[15px] font-bold text-[var(--gold)]" style="font-family: var(--font-header)">
+            <i class="fa-solid fa-cake-candles"></i>
+            <h3>Upcoming Birthdays &amp; Milestones</h3>
+          </div>
+          <div class="space-y-2" id="insights-birthdays-container">
+            <!-- Injected dynamically via app.js -->
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW 3: MEMORIES HISTORY LOG -->
       <section id="view-memories" class="space-y-3 pb-8 hidden">
         <div class="flex items-center justify-between px-1">
           <h2 class="text-[14px] font-bold uppercase tracking-wider" style="font-family: var(--font-header); color: var(--gold)">
@@ -180,12 +207,12 @@
         </div>
       </section>
 
-      <!-- VIEW 3: SETTINGS & IOS AUTO -->
+      <!-- VIEW 4: SETTINGS & IOS AUTO -->
       <section id="view-settings" class="space-y-4 pb-8 hidden">
         <div class="glass-card p-4 space-y-2 border border-[var(--border-strong)]">
           <div class="flex items-center justify-between">
             <span class="text-[15px] font-bold text-[var(--gold)]" style="font-family: var(--font-header)">App Updates &amp; Security PIN</span>
-            <span class="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-[rgba(var(--gold-rgb),0.15)] text-[var(--gold)] border border-[var(--border-strong)]">v2.2 • Security</span>
+            <span class="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-[rgba(var(--gold-rgb),0.15)] text-[var(--gold)] border border-[var(--border-strong)]">v2.4 • Complete</span>
           </div>
           <p class="text-[12.5px] text-[var(--text-secondary)] leading-relaxed">
             Manage PIN lock security and PWA cache updates (matching Reading Tracker settings).
@@ -212,6 +239,29 @@
           </div>
         </div>
 
+        <!-- Data Backup & Restore (JSON Export / Import) -->
+        <div class="glass-card p-4 space-y-2.5">
+          <div class="flex items-center gap-2 text-[15px] font-bold text-[var(--gold)]" style="font-family: var(--font-header)">
+            <i class="fa-solid fa-database"></i>
+            <h3>Data Backup &amp; Restore</h3>
+          </div>
+          <p class="text-[12.5px] text-[var(--text-secondary)] leading-relaxed">
+            Backup your contacts, recency dates, and memory logs to a JSON file or restore from a previous backup.
+          </p>
+          <div class="grid grid-cols-2 gap-2 pt-1">
+            <button id="btn-export-json" class="py-2.5 px-3 rounded-xl border text-[var(--gold)] text-[12px] font-bold flex items-center justify-center gap-1.5 touch-active" style="background: var(--bg-elevated); border-color: var(--border-strong)">
+              <i class="fa-solid fa-download text-[11px]"></i>
+              <span>Export JSON</span>
+            </button>
+
+            <label class="py-2.5 px-3 rounded-xl border text-[var(--text-primary)] text-[12px] font-bold flex items-center justify-center gap-1.5 touch-active cursor-pointer" style="background: var(--bg-input); border-color: var(--border)">
+              <i class="fa-solid fa-upload text-[11px]"></i>
+              <span>Import JSON</span>
+              <input type="file" id="file-import-json" accept=".json" class="hidden">
+            </label>
+          </div>
+        </div>
+
         <!-- iOS Shortcuts Deep Link Info -->
         <div class="glass-card p-4 space-y-2.5">
           <div class="flex items-center gap-2 text-[15px] font-bold text-[var(--gold)]" style="font-family: var(--font-header)">
@@ -230,33 +280,39 @@
 
     </main>
 
-    <!-- ── BOTTOM NAVIGATION TAB BAR (STRICTLY INSIDE HANDSET CONTAINER) ── -->
-    <nav class="sticky bottom-0 left-0 right-0 z-30 flex items-center justify-around px-4 py-2 glass-tab-bar shrink-0">
-      <!-- Recency Tab -->
+    <!-- ── SYMMETRICAL 5-SLOT BOTTOM NAVIGATION TAB BAR (GOLD '+' IN CENTER POSITION #3) ── -->
+    <nav class="sticky bottom-0 left-0 right-0 z-30 flex items-center justify-around px-3 py-2 glass-tab-bar shrink-0">
+      <!-- Slot 1: Recency -->
       <button id="tab-btn-recency" class="flex flex-col items-center gap-1 text-[10.5px] font-mono text-[var(--gold)] font-bold touch-active">
         <i class="fa-solid fa-clock-rotate-left text-base"></i>
         <span>Recency</span>
       </button>
 
-      <!-- Floating Gold Quick Log Button -->
+      <!-- Slot 2: Insights -->
+      <button id="tab-btn-insights" class="flex flex-col items-center gap-1 text-[10.5px] font-mono text-[var(--text-tertiary)] touch-active">
+        <i class="fa-solid fa-chart-pie text-base"></i>
+        <span>Insights</span>
+      </button>
+
+      <!-- Slot 3 (CENTER): Floating Gold Quick Log Button -->
       <button id="btn-open-quick-log" class="w-11 h-11 -mt-4 rounded-full gold-glow-btn flex items-center justify-center touch-active shadow-lg" aria-label="Quick Log Check-In">
         <i class="fa-solid fa-plus text-lg text-[#181412]"></i>
       </button>
 
-      <!-- Memories Tab -->
+      <!-- Slot 4: Memories -->
       <button id="tab-btn-memories" class="flex flex-col items-center gap-1 text-[10.5px] font-mono text-[var(--text-tertiary)] touch-active">
         <i class="fa-solid fa-box-archive text-base"></i>
         <span>Memories</span>
       </button>
 
-      <!-- Settings Tab -->
+      <!-- Slot 5: Settings / iOS Auto -->
       <button id="tab-btn-settings" class="flex flex-col items-center gap-1 text-[10.5px] font-mono text-[var(--text-tertiary)] touch-active">
         <i class="fa-solid fa-sliders text-base"></i>
         <span>iOS Auto</span>
       </button>
     </nav>
 
-    <!-- ── MODAL 1: QUICK LOG SHEET (ENHANCED WITH SEARCH, TOP 10 BUBBLES, DICTATION, OTHER MEDIUM) ── -->
+    <!-- ── MODAL 1: QUICK LOG SHEET (WITH INITIATOR TOGGLE & LOCATION TAGGING) ── -->
     <div id="modal-quick-log" class="fixed inset-0 z-50 flex items-end justify-center hidden bg-black/60 backdrop-blur-sm transition-opacity">
       <div class="w-full max-w-[448px] glass-sheet p-5 space-y-3.5 animate-slide-up max-h-[90vh] overflow-y-auto no-scrollbar">
         <div class="flex items-center justify-between border-b pb-2" style="border-color: var(--border)">
@@ -278,7 +334,7 @@
           </div>
         </div>
 
-        <!-- Contact Select Bubbles (Top 10 Most Recent) -->
+        <!-- Contact Select Bubbles (Top 10 Recent) -->
         <div>
           <div class="flex items-center justify-between mb-1">
             <label class="text-[11px] font-mono uppercase tracking-wider text-[var(--text-tertiary)]">Select Person (Top 10 Recent)</label>
@@ -286,6 +342,21 @@
           </div>
           <div class="flex gap-2 overflow-x-auto pb-1.5 no-scrollbar" id="quicklog-contacts-chips">
             <!-- Chips injected dynamically -->
+          </div>
+        </div>
+
+        <!-- Initiator Toggle (I Reached Out vs They Reached Out) -->
+        <div>
+          <label class="text-[11px] font-mono uppercase tracking-wider text-[var(--text-tertiary)] block mb-1">Initiator Direction</label>
+          <div class="grid grid-cols-2 gap-2" id="quicklog-initiator-toggle">
+            <button type="button" id="btn-init-outgoing" class="py-2 px-3 rounded-xl border text-[12px] font-semibold flex items-center justify-center gap-1.5 touch-active" style="background: rgba(52,199,89,0.15); color: #34C759; border-color: rgba(52,199,89,0.3)">
+              <i class="fa-solid fa-paper-plane text-xs"></i>
+              <span>I Reached Out</span>
+            </button>
+            <button type="button" id="btn-init-incoming" class="py-2 px-3 rounded-xl border text-[12px] font-semibold flex items-center justify-center gap-1.5 touch-active" style="background: var(--bg-elevated); color: var(--text-secondary); border-color: var(--border)">
+              <i class="fa-solid fa-inbox text-xs"></i>
+              <span>They Reached Out</span>
+            </button>
           </div>
         </div>
 
@@ -301,13 +372,21 @@
         <div>
           <div class="flex items-center justify-between mb-1">
             <label class="text-[11px] font-mono uppercase tracking-wider text-[var(--text-tertiary)]">What was discussed / memory note</label>
-            <!-- Voice Dictation Button -->
             <button type="button" id="btn-start-dictation" class="px-2.5 py-1 rounded-full text-[11px] font-bold flex items-center gap-1.5 touch-active border transition-all" style="background: rgba(var(--gold-rgb), 0.15); color: var(--gold); border-color: var(--border-strong)" title="Dictate verbally with microphone">
               <i class="fa-solid fa-microphone text-[11px]" id="dictation-icon"></i>
               <span id="dictation-label">Dictate</span>
             </button>
           </div>
           <input type="text" id="quicklog-note-input" placeholder="e.g. Discussed weekend plans, job updates..." class="w-full px-3.5 py-2.5 rounded-xl text-[13.5px] outline-none" style="background: var(--bg-input); border: 1px solid var(--border); color: var(--text-primary)">
+        </div>
+
+        <!-- Location Tag Input (Optional) -->
+        <div>
+          <label class="text-[11px] font-mono uppercase tracking-wider text-[var(--text-tertiary)] block mb-1">Location Tag (Optional)</label>
+          <div class="relative">
+            <i class="fa-solid fa-location-dot absolute left-3.5 top-1/2 -translate-y-1/2 text-[11px] text-[var(--text-tertiary)]"></i>
+            <input type="text" id="quicklog-location-input" placeholder="e.g. Blue Bottle Coffee, SF" class="w-full pl-9 pr-3.5 py-2 rounded-xl text-[13px] outline-none" style="background: var(--bg-input); border: 1px solid var(--border); color: var(--text-primary)">
+          </div>
         </div>
 
         <!-- Action Buttons -->
@@ -341,10 +420,15 @@
         <form id="contact-form" class="space-y-3.5">
           <input type="hidden" id="contact-form-id">
 
-          <!-- Name -->
-          <div>
-            <label class="text-[11px] font-mono uppercase tracking-wider text-[var(--text-tertiary)] block mb-1">Name *</label>
-            <input type="text" id="contact-input-name" required placeholder="e.g. Sarah Connor" class="w-full px-3.5 py-2.5 rounded-xl text-[13.5px] outline-none" style="background: var(--bg-input); border: 1px solid var(--border); color: var(--text-primary)">
+          <!-- Name & VIP Pin Toggle -->
+          <div class="flex items-center gap-2">
+            <div class="flex-1">
+              <label class="text-[11px] font-mono uppercase tracking-wider text-[var(--text-tertiary)] block mb-1">Name *</label>
+              <input type="text" id="contact-input-name" required placeholder="e.g. Sarah Connor" class="w-full px-3.5 py-2.5 rounded-xl text-[13.5px] outline-none" style="background: var(--bg-input); border: 1px solid var(--border); color: var(--text-primary)">
+            </div>
+            <button type="button" id="btn-toggle-vip-pin" class="mt-5 p-2.5 rounded-xl border text-[14px] touch-active" style="background: var(--bg-elevated); border-color: var(--border); color: var(--text-tertiary)" title="Pin as VIP at top of dashboard">
+              <i class="fa-solid fa-star" id="vip-star-icon"></i>
+            </button>
           </div>
 
           <!-- Category / Group -->
@@ -366,10 +450,16 @@
             </div>
           </div>
 
-          <!-- Phone -->
-          <div>
-            <label class="text-[11px] font-mono uppercase tracking-wider text-[var(--text-tertiary)] block mb-1">Phone Number (Optional)</label>
-            <input type="tel" id="contact-input-phone" placeholder="+1 555 0192" class="w-full px-3.5 py-2.5 rounded-xl text-[13.5px] outline-none" style="background: var(--bg-input); border: 1px solid var(--border); color: var(--text-primary)">
+          <!-- Phone & Birthday Date -->
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="text-[11px] font-mono uppercase tracking-wider text-[var(--text-tertiary)] block mb-1">Phone (Optional)</label>
+              <input type="tel" id="contact-input-phone" placeholder="+1 555 0192" class="w-full px-3 py-2.5 rounded-xl text-[13px] outline-none" style="background: var(--bg-input); border: 1px solid var(--border); color: var(--text-primary)">
+            </div>
+            <div>
+              <label class="text-[11px] font-mono uppercase tracking-wider text-[var(--text-tertiary)] block mb-1">Birthday (Optional)</label>
+              <input type="date" id="contact-input-birthday" class="w-full px-3 py-2.5 rounded-xl text-[13px] outline-none" style="background: var(--bg-input); border: 1px solid var(--border); color: var(--text-primary)">
+            </div>
           </div>
 
           <!-- Target Check-In Frequency -->
@@ -403,9 +493,59 @@
       </div>
     </div>
 
+    <!-- ── MODAL 3: PERSON DOSSIER MODAL (FULL INTERACTION TIMELINE & DETAILS) ── -->
+    <div id="modal-person-dossier" class="fixed inset-0 z-50 flex items-end justify-center hidden bg-black/60 backdrop-blur-sm transition-opacity">
+      <div class="w-full max-w-[448px] glass-sheet p-5 space-y-4 max-h-[90vh] overflow-y-auto no-scrollbar">
+        <div class="flex items-center justify-between border-b pb-2" style="border-color: var(--border)">
+          <div class="flex items-center gap-2">
+            <h3 id="dossier-name" class="text-[19px] font-bold text-[var(--gold)]" style="font-family: var(--font-header)">Person Name</h3>
+            <span id="dossier-cat-badge" class="px-2 py-0.5 rounded-md text-[10px] font-mono font-semibold" style="background: var(--bg-elevated); color: var(--text-secondary); border: 1px solid var(--border)">Category</span>
+          </div>
+          <button id="btn-close-dossier" class="w-7 h-7 rounded-full flex items-center justify-center text-[var(--text-tertiary)] hover:text-white">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <!-- Dossier Quick Stats & Actions -->
+        <div class="grid grid-cols-2 gap-2 text-[12px] font-mono">
+          <div class="p-3 rounded-xl border" style="background: var(--bg-elevated); border-color: var(--border)">
+            <span class="text-[10px] text-[var(--text-tertiary)] block">LAST CHECK-IN</span>
+            <span id="dossier-last-time" class="font-bold text-[var(--gold)]">3 days ago</span>
+          </div>
+          <div class="p-3 rounded-xl border" style="background: var(--bg-elevated); border-color: var(--border)">
+            <span class="text-[10px] text-[var(--text-tertiary)] block">TARGET FREQ</span>
+            <span id="dossier-target-freq" class="font-bold text-[var(--text-primary)]">Monthly</span>
+          </div>
+        </div>
+
+        <!-- Memory Notes Box -->
+        <div class="p-3.5 rounded-xl border space-y-1" style="background: var(--bg-input); border-color: var(--border)">
+          <span class="text-[10px] font-mono uppercase tracking-wider text-[var(--text-tertiary)] block">Memory Notes &amp; Facts</span>
+          <p id="dossier-notes-text" class="text-[13px] text-[var(--text-primary)] leading-relaxed selectable">No memory notes added yet.</p>
+        </div>
+
+        <!-- Full Interaction History Timeline -->
+        <div class="space-y-2 pt-1">
+          <h4 class="text-[12px] font-mono uppercase tracking-wider text-[var(--text-tertiary)]">Complete History Timeline</h4>
+          <div id="dossier-timeline-container" class="space-y-2">
+            <!-- Injected dynamically -->
+          </div>
+        </div>
+
+        <div class="pt-2 flex gap-2">
+          <button id="btn-dossier-quicklog" class="flex-1 py-3 rounded-xl gold-glow-btn text-[13.5px] font-bold touch-active flex items-center justify-center gap-1.5">
+            <i class="fa-solid fa-plus text-xs"></i> Log Touchpoint
+          </button>
+          <button id="btn-dossier-edit" class="py-3 px-4 rounded-xl border text-[13.5px] font-semibold touch-active" style="background: var(--bg-elevated); border-color: var(--border); color: var(--text-primary)">
+            Edit Profile
+          </button>
+        </div>
+      </div>
+    </div>
+
   </div>
 
   <!-- Application Logic -->
-  <script src="app.js?v=202"></script>
+  <script src="app.js?v=203"></script>
 </body>
 </html>

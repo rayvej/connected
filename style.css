@@ -51,8 +51,8 @@
   --bg-input-focus: rgba(184, 122, 40, 0.15);
 
   --text-primary: #2C2219;
-  --text-secondary: #4A3B2C; /* High contrast for light mode */
-  --text-tertiary: #6E5A46;  /* High contrast for light mode labels */
+  --text-secondary: #4A3B2C;
+  --text-tertiary: #6E5A46;
 
   --gold: #B87A28;
   --gold-rgb: 184, 122, 40;
@@ -174,7 +174,36 @@ html, body {
   color: var(--gold);
 }
 
-/* Microphone Pulse Animation */
+/* Initiator Direction Badges */
+.initiator-badge-outgoing {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  font-size: 10px;
+  font-family: var(--font-figures);
+  font-weight: 600;
+  background: rgba(52, 199, 89, 0.12);
+  color: #34C759;
+  border: 1px solid rgba(52, 199, 89, 0.25);
+}
+
+.initiator-badge-incoming {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  font-size: 10px;
+  font-family: var(--font-figures);
+  font-weight: 600;
+  background: rgba(0, 122, 255, 0.12);
+  color: #007AFF;
+  border: 1px solid rgba(0, 122, 255, 0.25);
+}
+
+/* Voice Dictation Microphone Pulse */
 @keyframes micPulse {
   0% { box-shadow: 0 0 0 0 rgba(225, 29, 72, 0.6); }
   70% { box-shadow: 0 0 0 10px rgba(225, 29, 72, 0); }

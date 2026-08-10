@@ -4,10 +4,10 @@
   'use strict';
 
   // ── CONSTANTS & STORAGE KEYS ──
-  const STORAGE_KEY_CONTACTS = 'connected_contacts_v3';
-  const STORAGE_KEY_LOGS = 'connected_logs_v3';
-  const STORAGE_KEY_CATEGORIES = 'connected_categories_v3';
-  const STORAGE_KEY_THEME = 'connected_theme_v3';
+  const STORAGE_KEY_CONTACTS = 'connected_contacts_v4';
+  const STORAGE_KEY_LOGS = 'connected_logs_v4';
+  const STORAGE_KEY_CATEGORIES = 'connected_categories_v4';
+  const STORAGE_KEY_THEME = 'connected_theme_v4';
   const STORAGE_KEY_AUTH = 'connected_auth_state_v1';
   const STORAGE_KEY_PIN = 'connected_pin_code_v1';
 
@@ -21,7 +21,7 @@
     { id: 'cat-4', name: 'Mentors' },
   ];
 
-  // Seed Contacts
+  // Seed Contacts with Birthday, Notes, and Pinned status
   const DEFAULT_CONTACTS = [
     {
       id: 'contact-1',
@@ -31,7 +31,10 @@
       targetFrequency: 'Weekly',
       lastContactedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
       lastMedium: 'FaceTime',
+      lastInitiator: 'outgoing',
       notes: 'Loves garden updates. Remind her about upcoming weekend lunch.',
+      isPinned: true,
+      birthday: '1965-08-15',
       createdAt: new Date().toISOString(),
     },
     {
@@ -42,7 +45,10 @@
       targetFrequency: 'Monthly',
       lastContactedAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
       lastMedium: 'iMessage',
+      lastInitiator: 'incoming',
       notes: 'Recently changed jobs to Senior PM. Asked about onboarding.',
+      isPinned: false,
+      birthday: '1992-11-20',
       createdAt: new Date().toISOString(),
     },
     {
@@ -53,7 +59,10 @@
       targetFrequency: 'Quarterly',
       lastContactedAt: new Date(Date.now() - 24 * 24 * 60 * 60 * 1000).toISOString(),
       lastMedium: 'Call',
+      lastInitiator: 'outgoing',
       notes: 'Planning family reunion trip next summer.',
+      isPinned: false,
+      birthday: '',
       createdAt: new Date().toISOString(),
     },
     {
@@ -64,7 +73,10 @@
       targetFrequency: 'Monthly',
       lastContactedAt: new Date(Date.now() - 40 * 24 * 60 * 60 * 1000).toISOString(),
       lastMedium: 'WeChat',
+      lastInitiator: 'incoming',
       notes: 'Traveling in Tokyo until end of month.',
+      isPinned: false,
+      birthday: '1994-09-02',
       createdAt: new Date().toISOString(),
     }
   ];
@@ -75,7 +87,9 @@
       contactId: 'contact-1',
       contactName: 'Mom',
       medium: 'FaceTime',
+      initiator: 'outgoing',
       summary: 'Had a quick 15-min catchup. Shared photos from Sunday park walk.',
+      location: 'Home',
       occurredAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
     },
     {
@@ -83,12 +97,13 @@
       contactId: 'contact-2',
       contactName: 'Alex Rivera',
       medium: 'iMessage',
+      initiator: 'incoming',
       summary: 'Sent congrats message for new job role!',
+      location: 'SF Office',
       occurredAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
     }
   ];
 
-  // Medium Config (Including 'Other')
   const MEDIUM_CONFIG = {
     iMessage: { icon: 'fa-comment', color: '#007AFF' },
     Call: { icon: 'fa-phone', color: '#34C759' },
@@ -110,7 +125,9 @@
     activeTab: 'recency',
     selectedMedium: 'iMessage',
     selectedQuickContactId: null,
+    selectedInitiator: 'outgoing', // 'outgoing' (I reached out) vs 'incoming' (They reached out)
     selectedFormFreq: 'Monthly',
+    isFormVipPinned: false,
     isDarkMode: true,
     // Security & Auth
     isAuthenticated: false,
@@ -119,11 +136,11 @@
     userPin: DEFAULT_PIN,
     isRecordingSpeech: false,
     speechRecognitionInstance: null,
+    dossierContactId: null,
   };
 
   // ── DATA SERVICE ──
   function loadData() {
-    // Categories
     const rawCat = localStorage.getItem(STORAGE_KEY_CATEGORIES);
     if (!rawCat) {
       state.categories = DEFAULT_CATEGORIES;
@@ -132,7 +149,6 @@
       try { state.categories = JSON.parse(rawCat); } catch { state.categories = DEFAULT_CATEGORIES; }
     }
 
-    // Contacts
     const rawContacts = localStorage.getItem(STORAGE_KEY_CONTACTS);
     if (!rawContacts) {
       state.contacts = DEFAULT_CONTACTS;
@@ -141,7 +157,6 @@
       try { state.contacts = JSON.parse(rawContacts); } catch { state.contacts = DEFAULT_CONTACTS; }
     }
 
-    // Logs
     const rawLogs = localStorage.getItem(STORAGE_KEY_LOGS);
     if (!rawLogs) {
       state.logs = DEFAULT_LOGS;
@@ -150,11 +165,9 @@
       try { state.logs = JSON.parse(rawLogs); } catch { state.logs = DEFAULT_LOGS; }
     }
 
-    // Saved PIN
     const savedPin = localStorage.getItem(STORAGE_KEY_PIN);
     if (savedPin) state.userPin = savedPin;
 
-    // Saved Auth
     const savedAuth = localStorage.getItem(STORAGE_KEY_AUTH);
     if (savedAuth === 'true') state.isAuthenticated = true;
 
@@ -175,6 +188,10 @@
 
   function sortContactsByRecency() {
     state.contacts.sort((a, b) => {
+      // Pinned contacts sit at top
+      if (a.isPinned && !b.isPinned) return -1;
+      if (!a.isPinned && b.isPinned) return 1;
+
       const tA = a.lastContactedAt ? new Date(a.lastContactedAt).getTime() : 0;
       const tB = b.lastContactedAt ? new Date(b.lastContactedAt).getTime() : 0;
       return tB - tA;
@@ -202,7 +219,7 @@
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   }
 
-  // ── SECURITY & AUTH CONTROLLER (Reading Tracker Style) ──
+  // ── SECURITY & AUTH CONTROLLER ──
   function checkSecurityState() {
     const authScreen = document.getElementById('auth-screen');
     const pinScreen = document.getElementById('pin-screen');
@@ -245,7 +262,6 @@
           if (pinErr) pinErr.classList.add('hidden');
           checkSecurityState();
         } else {
-          // Incorrect PIN
           const pinErr = document.getElementById('pin-error');
           if (pinErr) pinErr.classList.remove('hidden');
           state.pinBuffer = '';
@@ -309,14 +325,10 @@
     }
   }
 
-  // ── VOICE DICTATION CONTROLLER (Web Speech API) ──
+  // ── VOICE DICTATION CONTROLLER ──
   function initVoiceDictation() {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      const btn = document.getElementById('btn-start-dictation');
-      if (btn) btn.title = 'Voice dictation not supported in this browser';
-      return;
-    }
+    if (!SpeechRecognition) return;
 
     const recognition = new SpeechRecognition();
     recognition.continuous = false;
@@ -384,6 +396,7 @@
   function renderAll() {
     renderCategoryPills();
     renderRecencyContacts();
+    renderInsightsTab();
     renderMemoriesList();
     updateShortcutUrlDisplay();
   }
@@ -450,11 +463,16 @@
       const mediumIcon = MEDIUM_CONFIG[c.lastMedium]?.icon || 'fa-comment';
       const relTime = formatRelativeTime(c.lastContactedAt);
 
+      const initiatorBadge = c.lastInitiator === 'incoming'
+        ? `<span class="initiator-badge-incoming"><i class="fa-solid fa-inbox"></i> They reached out</span>`
+        : `<span class="initiator-badge-outgoing"><i class="fa-solid fa-paper-plane"></i> I reached out</span>`;
+
       html += `
         <div class="glass-card p-4 cursor-pointer touch-active contact-item" data-id="${c.id}">
           <div class="flex items-center justify-between gap-2">
             <div class="flex items-center gap-2 min-w-0">
-              <h3 class="text-[17.5px] font-bold tracking-tight truncate" style="font-family: var(--font-header); color: var(--gold)">
+              ${c.isPinned ? `<i class="fa-solid fa-star text-xs text-[var(--gold)]"></i>` : ''}
+              <h3 class="text-[17.5px] font-bold tracking-tight truncate open-dossier-btn" data-id="${c.id}" style="font-family: var(--font-header); color: var(--gold)">
                 ${c.name}
               </h3>
               <span class="px-2 py-0.5 rounded-md text-[10px] font-mono font-semibold" style="background: var(--bg-elevated); color: var(--text-secondary); border: 1px solid var(--border)">
@@ -468,13 +486,16 @@
             </div>
           </div>
 
-          <div class="mt-2.5 flex items-center justify-between gap-2">
-            ${c.lastMedium ? `
-              <span class="medium-badge">
-                <i class="fa-solid ${mediumIcon} text-[10px]"></i>
-                <span>Via ${c.lastMedium}</span>
-              </span>
-            ` : `<span class="text-[11px] text-[var(--text-tertiary)] italic">No medium logged</span>`}
+          <div class="mt-2.5 flex items-center justify-between gap-2 flex-wrap">
+            <div class="flex items-center gap-1.5 flex-wrap">
+              ${c.lastMedium ? `
+                <span class="medium-badge">
+                  <i class="fa-solid ${mediumIcon} text-[10px]"></i>
+                  <span>Via ${c.lastMedium}</span>
+                </span>
+              ` : ''}
+              ${initiatorBadge}
+            </div>
 
             <span class="text-[11px] font-mono text-[var(--text-tertiary)]">
               Target: ${c.targetFrequency}
@@ -492,12 +513,69 @@
 
     container.innerHTML = html;
 
+    // Attach card click listener to open Person Dossier Modal
     container.querySelectorAll('.contact-item').forEach(card => {
       card.addEventListener('click', () => {
         const id = card.getAttribute('data-id');
-        openContactFormModal(id);
+        openPersonDossierModal(id);
       });
     });
+  }
+
+  // ── INSIGHTS & ANALYTICS TAB RENDER ──
+  function renderInsightsTab() {
+    const matrixContainer = document.getElementById('insights-matrix-container');
+    const birthdayContainer = document.getElementById('insights-birthdays-container');
+    if (!matrixContainer) return;
+
+    // 1. Calculate Category Touchpoint Balance Matrix
+    const catCounts = {};
+    state.categories.forEach(cat => catCounts[cat.name] = 0);
+    state.contacts.forEach(c => {
+      const cat = c.category || 'General';
+      catCounts[cat] = (catCounts[cat] || 0) + 1;
+    });
+
+    const totalContacts = state.contacts.length || 1;
+    let matrixHtml = '';
+    Object.keys(catCounts).forEach(catName => {
+      const count = catCounts[catName];
+      const pct = Math.round((count / totalContacts) * 100);
+      matrixHtml += `
+        <div class="space-y-1">
+          <div class="flex justify-between text-[12px] font-semibold">
+            <span>${catName} (${count})</span>
+            <span class="font-mono text-[var(--gold)]">${pct}%</span>
+          </div>
+          <div class="w-full h-2 rounded-full overflow-hidden" style="background: var(--bg-input)">
+            <div class="h-full rounded-full transition-all duration-500" style="width: ${pct}%; background: linear-gradient(90deg, var(--gold), var(--gold-light))"></div>
+          </div>
+        </div>
+      `;
+    });
+    matrixContainer.innerHTML = matrixHtml;
+
+    // 2. Upcoming Birthdays
+    if (birthdayContainer) {
+      const withBirthdays = state.contacts.filter(c => c.birthday);
+      if (withBirthdays.length === 0) {
+        birthdayContainer.innerHTML = `<span class="text-[12px] text-[var(--text-tertiary)] italic">No birthdays saved. Edit a person to add their birthday!</span>`;
+      } else {
+        let bdayHtml = '';
+        withBirthdays.forEach(c => {
+          bdayHtml += `
+            <div class="flex items-center justify-between p-2.5 rounded-xl border text-[12.5px]" style="background: var(--bg-elevated); border-color: var(--border)">
+              <div class="flex items-center gap-2">
+                <span class="text-base">🎂</span>
+                <span class="font-semibold text-[var(--text-primary)]">${c.name}</span>
+              </div>
+              <span class="font-mono text-[11px] text-[var(--gold)]">${c.birthday}</span>
+            </div>
+          `;
+        });
+        birthdayContainer.innerHTML = bdayHtml;
+      }
+    }
   }
 
   function renderMemoriesList() {
@@ -507,6 +585,7 @@
     const filtered = state.logs.filter(l => {
       return l.contactName.toLowerCase().includes(state.searchQuery.toLowerCase()) ||
         l.summary.toLowerCase().includes(state.searchQuery.toLowerCase()) ||
+        (l.location && l.location.toLowerCase().includes(state.searchQuery.toLowerCase())) ||
         l.medium.toLowerCase().includes(state.searchQuery.toLowerCase());
     });
 
@@ -524,6 +603,10 @@
     let html = '';
     filtered.forEach(log => {
       const mediumIcon = MEDIUM_CONFIG[log.medium]?.icon || 'fa-comment';
+      const initBadge = log.initiator === 'incoming'
+        ? `<span class="initiator-badge-incoming"><i class="fa-solid fa-inbox"></i> They reached out</span>`
+        : `<span class="initiator-badge-outgoing"><i class="fa-solid fa-paper-plane"></i> I reached out</span>`;
+
       html += `
         <div class="glass-card p-4">
           <div class="flex items-center justify-between">
@@ -531,15 +614,24 @@
               ${log.contactName}
             </span>
 
-            <span class="medium-badge">
-              <i class="fa-solid ${mediumIcon} text-[10px]"></i>
-              <span>Via ${log.medium}</span>
-            </span>
+            <div class="flex items-center gap-1.5">
+              <span class="medium-badge">
+                <i class="fa-solid ${mediumIcon} text-[10px]"></i>
+                <span>Via ${log.medium}</span>
+              </span>
+              ${initBadge}
+            </div>
           </div>
 
           <p class="text-[13.5px] text-[var(--text-primary)] mt-2 leading-relaxed selectable">
             ${log.summary}
           </p>
+
+          ${log.location ? `
+            <div class="text-[11px] font-mono text-[var(--gold)] mt-1.5">
+              <i class="fa-solid fa-location-dot text-[10px]"></i> ${log.location}
+            </div>
+          ` : ''}
 
           <div class="flex items-center justify-between mt-3 pt-2 text-[11px] font-mono text-[var(--text-secondary)]" style="border-top: 1px solid var(--border)">
             <span>${formatDateShort(log.occurredAt)}</span>
@@ -552,20 +644,70 @@
     container.innerHTML = html;
   }
 
-  // ── MODAL 1: QUICK LOG CONTROLLER (SEARCH + TOP 10 BUBBLES + OTHER MEDIUM) ──
+  // ── PERSON DOSSIER MODAL ──
+  function openPersonDossierModal(contactId) {
+    const modal = document.getElementById('modal-person-dossier');
+    if (!modal) return;
+
+    state.dossierContactId = contactId;
+    const contact = state.contacts.find(c => c.id === contactId);
+    if (!contact) return;
+
+    document.getElementById('dossier-name').textContent = contact.name;
+    document.getElementById('dossier-cat-badge').textContent = contact.category || 'General';
+    document.getElementById('dossier-last-time').textContent = formatRelativeTime(contact.lastContactedAt);
+    document.getElementById('dossier-target-freq').textContent = contact.targetFrequency;
+    document.getElementById('dossier-notes-text').textContent = contact.notes || 'No memory notes added yet.';
+
+    // Populate full timeline history
+    const timelineContainer = document.getElementById('dossier-timeline-container');
+    const personLogs = state.logs.filter(l => l.contactId === contactId);
+
+    if (personLogs.length === 0) {
+      timelineContainer.innerHTML = `<span class="text-[12px] text-[var(--text-tertiary)] italic">No check-in history logged yet.</span>`;
+    } else {
+      let tHtml = '';
+      personLogs.forEach(l => {
+        const mediumIcon = MEDIUM_CONFIG[l.medium]?.icon || 'fa-comment';
+        tHtml += `
+          <div class="p-3 rounded-xl border space-y-1" style="background: var(--bg-elevated); border-color: var(--border)">
+            <div class="flex items-center justify-between text-[11px] font-mono text-[var(--text-secondary)]">
+              <span>${formatDateShort(l.occurredAt)}</span>
+              <span class="medium-badge"><i class="fa-solid ${mediumIcon} text-[10px]"></i> Via ${l.medium}</span>
+            </div>
+            <p class="text-[12.5px] text-[var(--text-primary)] leading-relaxed">${l.summary}</p>
+          </div>
+        `;
+      });
+      timelineContainer.innerHTML = tHtml;
+    }
+
+    modal.classList.remove('hidden');
+  }
+
+  function closePersonDossierModal() {
+    const modal = document.getElementById('modal-person-dossier');
+    if (modal) modal.classList.add('hidden');
+  }
+
+  // ── MODAL 1: QUICK LOG CONTROLLER (WITH INITIATOR TOGGLE & LOCATION) ──
   function openQuickLogModal(preselectedId = null) {
     const modal = document.getElementById('modal-quick-log');
     if (!modal) return;
 
     state.selectedQuickContactId = preselectedId || (state.contacts[0] ? state.contacts[0].id : null);
     state.selectedMedium = 'iMessage';
+    state.selectedInitiator = 'outgoing'; // Default: I reached out
     state.quickPersonSearchQuery = '';
 
     const searchInput = document.getElementById('quicklog-search-input');
     if (searchInput) searchInput.value = '';
 
     document.getElementById('quicklog-note-input').value = '';
+    const locInput = document.getElementById('quicklog-location-input');
+    if (locInput) locInput.value = '';
 
+    updateInitiatorToggleUI();
     renderQuickLogChips();
     renderQuickLogMediumGrid();
 
@@ -580,18 +722,40 @@
     }
   }
 
+  function updateInitiatorToggleUI() {
+    const btnOut = document.getElementById('btn-init-outgoing');
+    const btnIn = document.getElementById('btn-init-incoming');
+    if (!btnOut || !btnIn) return;
+
+    if (state.selectedInitiator === 'outgoing') {
+      btnOut.style.background = 'rgba(52, 199, 89, 0.15)';
+      btnOut.style.color = '#34C759';
+      btnOut.style.borderColor = 'rgba(52, 199, 89, 0.3)';
+
+      btnIn.style.background = 'var(--bg-elevated)';
+      btnIn.style.color = 'var(--text-secondary)';
+      btnIn.style.borderColor = 'var(--border)';
+    } else {
+      btnIn.style.background = 'rgba(0, 122, 255, 0.15)';
+      btnIn.style.color = '#007AFF';
+      btnIn.style.borderColor = 'rgba(0, 122, 255, 0.3)';
+
+      btnOut.style.background = 'var(--bg-elevated)';
+      btnOut.style.color = 'var(--text-secondary)';
+      btnOut.style.borderColor = 'var(--border)';
+    }
+  }
+
   function renderQuickLogChips() {
     const container = document.getElementById('quicklog-contacts-chips');
     const bubbleCountEl = document.getElementById('quicklog-bubble-count');
     if (!container) return;
 
-    // Filter contacts based on quick log search query
     let filtered = state.contacts.filter(c => {
       return c.name.toLowerCase().includes(state.quickPersonSearchQuery.toLowerCase()) ||
         (c.category && c.category.toLowerCase().includes(state.quickPersonSearchQuery.toLowerCase()));
     });
 
-    // Limit to top 10 most recent contacts if no search query
     if (!state.quickPersonSearchQuery) {
       filtered = filtered.slice(0, 10);
     }
@@ -660,6 +824,7 @@
     if (!contact) return;
 
     const noteInput = document.getElementById('quicklog-note-input').value.trim();
+    const locInput = document.getElementById('quicklog-location-input')?.value.trim() || '';
     const nowIso = new Date().toISOString();
 
     const newLog = {
@@ -667,16 +832,18 @@
       contactId: contact.id,
       contactName: contact.name,
       medium: state.selectedMedium,
+      initiator: state.selectedInitiator,
       summary: noteInput || `Checked in via ${state.selectedMedium}`,
+      location: locInput,
       occurredAt: nowIso,
     };
 
     state.logs.unshift(newLog);
     saveLogs();
 
-    // Update contact recency
     contact.lastContactedAt = nowIso;
     contact.lastMedium = state.selectedMedium;
+    contact.lastInitiator = state.selectedInitiator;
     saveContacts();
     sortContactsByRecency();
 
@@ -703,6 +870,7 @@
     const formId = document.getElementById('contact-form-id');
     const inputName = document.getElementById('contact-input-name');
     const inputPhone = document.getElementById('contact-input-phone');
+    const inputBirthday = document.getElementById('contact-input-birthday');
     const inputNotes = document.getElementById('contact-input-notes');
 
     if (contactId) {
@@ -712,9 +880,11 @@
         formId.value = c.id;
         inputName.value = c.name;
         inputPhone.value = c.phone || '';
+        inputBirthday.value = c.birthday || '';
         inputNotes.value = c.notes || '';
         state.selectedCategory = c.category || 'Family';
         state.selectedFormFreq = c.targetFrequency || 'Monthly';
+        state.isFormVipPinned = !!c.isPinned;
         if (deleteBtn) deleteBtn.classList.remove('hidden');
       }
     } else {
@@ -722,12 +892,15 @@
       formId.value = '';
       inputName.value = '';
       inputPhone.value = '';
+      inputBirthday.value = '';
       inputNotes.value = '';
       state.selectedCategory = state.categories[0]?.name || 'Family';
       state.selectedFormFreq = 'Monthly';
+      state.isFormVipPinned = false;
       if (deleteBtn) deleteBtn.classList.add('hidden');
     }
 
+    updateVipStarButtonUI();
     renderContactCatOptions();
     renderFrequencyButtons();
     modal.classList.remove('hidden');
@@ -736,6 +909,22 @@
   function closeContactFormModal() {
     const modal = document.getElementById('modal-contact-form');
     if (modal) modal.classList.add('hidden');
+  }
+
+  function updateVipStarButtonUI() {
+    const btn = document.getElementById('btn-toggle-vip-pin');
+    const icon = document.getElementById('vip-star-icon');
+    if (!btn || !icon) return;
+
+    if (state.isFormVipPinned) {
+      btn.style.borderColor = 'var(--gold)';
+      btn.style.color = 'var(--gold)';
+      icon.className = 'fa-solid fa-star text-[14px] text-[var(--gold)]';
+    } else {
+      btn.style.borderColor = 'var(--border)';
+      btn.style.color = 'var(--text-tertiary)';
+      icon.className = 'fa-solid fa-star text-[14px]';
+    }
   }
 
   function renderContactCatOptions() {
@@ -789,6 +978,7 @@
     const formId = document.getElementById('contact-form-id').value;
     const name = document.getElementById('contact-input-name').value.trim();
     const phone = document.getElementById('contact-input-phone').value.trim();
+    const birthday = document.getElementById('contact-input-birthday').value;
     const notes = document.getElementById('contact-input-notes').value.trim();
 
     if (!name) return;
@@ -798,9 +988,11 @@
       if (c) {
         c.name = name;
         c.phone = phone;
+        c.birthday = birthday;
         c.notes = notes;
         c.category = state.selectedCategory;
         c.targetFrequency = state.selectedFormFreq;
+        c.isPinned = state.isFormVipPinned;
       }
     } else {
       const newContact = {
@@ -808,10 +1000,13 @@
         name,
         category: state.selectedCategory,
         phone,
+        birthday,
         targetFrequency: state.selectedFormFreq,
         lastContactedAt: new Date().toISOString(),
         lastMedium: 'iMessage',
+        lastInitiator: 'outgoing',
         notes,
+        isPinned: state.isFormVipPinned,
         createdAt: new Date().toISOString(),
       };
       state.contacts.unshift(newContact);
@@ -835,20 +1030,71 @@
     }
   }
 
-  // ── TAB SWITCHER ──
+  // ── JSON EXPORT & IMPORT ──
+  function exportJSONData() {
+    const exportObj = {
+      version: '2.4',
+      exportDate: new Date().toISOString(),
+      categories: state.categories,
+      contacts: state.contacts,
+      logs: state.logs,
+    };
+
+    const blob = new Blob([JSON.stringify(exportObj, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `connected_backup_${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function importJSONData(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function (e) {
+      try {
+        const parsed = JSON.parse(e.target.result);
+        if (parsed.contacts && Array.isArray(parsed.contacts)) {
+          state.contacts = parsed.contacts;
+          saveContacts();
+        }
+        if (parsed.categories && Array.isArray(parsed.categories)) {
+          state.categories = parsed.categories;
+          saveCategories();
+        }
+        if (parsed.logs && Array.isArray(parsed.logs)) {
+          state.logs = parsed.logs;
+          saveLogs();
+        }
+        sortContactsByRecency();
+        renderAll();
+        alert('✓ Data restored successfully!');
+      } catch (err) {
+        alert('Failed to import JSON file. Please check file format.');
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  // ── 5 SYMMETRICAL TABS SWITCHER ──
   function switchTab(tabName) {
     state.activeTab = tabName;
 
     const viewRecency = document.getElementById('view-recency');
+    const viewInsights = document.getElementById('view-insights');
     const viewMemories = document.getElementById('view-memories');
     const viewSettings = document.getElementById('view-settings');
 
     const tabRecency = document.getElementById('tab-btn-recency');
+    const tabInsights = document.getElementById('tab-btn-insights');
     const tabMemories = document.getElementById('tab-btn-memories');
     const tabSettings = document.getElementById('tab-btn-settings');
 
-    [viewRecency, viewMemories, viewSettings].forEach(v => v && v.classList.add('hidden'));
-    [tabRecency, tabMemories, tabSettings].forEach(t => {
+    [viewRecency, viewInsights, viewMemories, viewSettings].forEach(v => v && v.classList.add('hidden'));
+    [tabRecency, tabInsights, tabMemories, tabSettings].forEach(t => {
       if (t) {
         t.classList.remove('text-[var(--gold)]', 'font-bold');
         t.classList.add('text-[var(--text-tertiary)]');
@@ -860,6 +1106,12 @@
       if (tabRecency) {
         tabRecency.classList.add('text-[var(--gold)]', 'font-bold');
         tabRecency.classList.remove('text-[var(--text-tertiary)]');
+      }
+    } else if (tabName === 'insights') {
+      if (viewInsights) viewInsights.classList.remove('hidden');
+      if (tabInsights) {
+        tabInsights.classList.add('text-[var(--gold)]', 'font-bold');
+        tabInsights.classList.remove('text-[var(--text-tertiary)]');
       }
     } else if (tabName === 'memories') {
       if (viewMemories) viewMemories.classList.remove('hidden');
@@ -885,7 +1137,6 @@
 
   // ── EVENT BINDINGS ──
   function bindEvents() {
-    // Auth & PIN Screen Bindings
     document.getElementById('btn-google-signin')?.addEventListener('click', handleGoogleSignIn);
 
     document.querySelectorAll('.pin-key').forEach(btn => {
@@ -898,11 +1149,9 @@
     document.getElementById('pin-backspace')?.addEventListener('click', handlePinBackspace);
     document.getElementById('btn-lock-app-now')?.addEventListener('click', lockAppNow);
 
-    // Theme toggle
     const themeBtn = document.getElementById('btn-theme-toggle');
     if (themeBtn) themeBtn.addEventListener('click', toggleTheme);
 
-    // Main Search Input
     const searchInput = document.getElementById('search-input');
     if (searchInput) {
       searchInput.addEventListener('input', (e) => {
@@ -912,7 +1161,6 @@
       });
     }
 
-    // Quick Log Person Search Input
     const quickSearchInput = document.getElementById('quicklog-search-input');
     if (quickSearchInput) {
       quickSearchInput.addEventListener('input', (e) => {
@@ -921,11 +1169,45 @@
       });
     }
 
+    // Initiator Direction Toggle
+    document.getElementById('btn-init-outgoing')?.addEventListener('click', () => {
+      state.selectedInitiator = 'outgoing';
+      updateInitiatorToggleUI();
+    });
+
+    document.getElementById('btn-init-incoming')?.addEventListener('click', () => {
+      state.selectedInitiator = 'incoming';
+      updateInitiatorToggleUI();
+    });
+
     // Voice Dictation Button
     document.getElementById('btn-start-dictation')?.addEventListener('click', toggleVoiceDictation);
 
-    // Tabs
+    // VIP Star Pin Toggle
+    document.getElementById('btn-toggle-vip-pin')?.addEventListener('click', () => {
+      state.isFormVipPinned = !state.isFormVipPinned;
+      updateVipStarButtonUI();
+    });
+
+    // JSON Export / Import
+    document.getElementById('btn-export-json')?.addEventListener('click', exportJSONData);
+    document.getElementById('file-import-json')?.addEventListener('change', importJSONData);
+
+    // Dossier Modal Buttons
+    document.getElementById('btn-close-dossier')?.addEventListener('click', closePersonDossierModal);
+    document.getElementById('btn-dossier-quicklog')?.addEventListener('click', () => {
+      closePersonDossierModal();
+      openQuickLogModal(state.dossierContactId);
+    });
+    document.getElementById('btn-dossier-edit')?.addEventListener('click', () => {
+      const id = state.dossierContactId;
+      closePersonDossierModal();
+      openContactFormModal(id);
+    });
+
+    // 5 Symmetrical Tabs
     document.getElementById('tab-btn-recency')?.addEventListener('click', () => switchTab('recency'));
+    document.getElementById('tab-btn-insights')?.addEventListener('click', () => switchTab('insights'));
     document.getElementById('tab-btn-memories')?.addEventListener('click', () => switchTab('memories'));
     document.getElementById('tab-btn-settings')?.addEventListener('click', () => switchTab('settings'));
 

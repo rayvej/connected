@@ -14,9 +14,9 @@ googleProvider.setCustomParameters({ prompt: 'select_account' });
   'use strict';
 
   // ── CONSTANTS & STORAGE KEYS ──
-  const STORAGE_KEY_CONTACTS = 'connected_contacts_v6';
-  const STORAGE_KEY_LOGS = 'connected_logs_v6';
-  const STORAGE_KEY_CATEGORIES = 'connected_categories_v6';
+  const STORAGE_KEY_CONTACTS = 'connected_contacts_v7';
+  const STORAGE_KEY_LOGS = 'connected_logs_v7';
+  const STORAGE_KEY_CATEGORIES = 'connected_categories_v7';
   const STORAGE_KEY_THEME = 'connected_theme_v6';
   const STORAGE_KEY_PIN = 'connected_pin_code_v1';
 
@@ -29,93 +29,8 @@ googleProvider.setCustomParameters({ prompt: 'select_account' });
     { id: 'cat-4', name: 'Mentors' },
   ];
 
-  const DEFAULT_CONTACTS = [
-    {
-      id: 'contact-1',
-      name: 'Mom',
-      category: 'Family',
-      phone: '+15550192834',
-      targetFrequency: 'Weekly',
-      lastContactedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-      lastMedium: 'FaceTime',
-      lastInitiator: 'outgoing',
-      notes: 'Loves garden updates. Remind her about upcoming weekend lunch.',
-      isPinned: true,
-      birthday: '1965-08-15',
-      snoozedUntil: null,
-      createdAt: new Date().toISOString(),
-    },
-    {
-      id: 'contact-2',
-      name: 'Alex Rivera',
-      category: 'Close Friends',
-      phone: '+15550123984',
-      targetFrequency: 'Monthly',
-      lastContactedAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
-      lastMedium: 'iMessage',
-      lastInitiator: 'incoming',
-      notes: 'Recently changed jobs to Senior PM. Asked about onboarding.',
-      isPinned: false,
-      birthday: '1992-11-20',
-      snoozedUntil: null,
-      createdAt: new Date().toISOString(),
-    },
-    {
-      id: 'contact-3',
-      name: 'Uncle David',
-      category: 'Family',
-      phone: '+15550182736',
-      targetFrequency: 'Quarterly',
-      lastContactedAt: new Date(Date.now() - 24 * 24 * 60 * 60 * 1000).toISOString(),
-      lastMedium: 'Call',
-      lastInitiator: 'outgoing',
-      notes: 'Planning family reunion trip next summer.',
-      isPinned: false,
-      birthday: '',
-      snoozedUntil: null,
-      createdAt: new Date().toISOString(),
-    },
-    {
-      id: 'contact-4',
-      name: 'Mei Chen',
-      category: 'Close Friends',
-      phone: '+15550174829',
-      targetFrequency: 'Monthly',
-      lastContactedAt: new Date(Date.now() - 40 * 24 * 60 * 60 * 1000).toISOString(),
-      lastMedium: 'WeChat',
-      lastInitiator: 'incoming',
-      notes: 'Traveling in Tokyo until end of month.',
-      isPinned: false,
-      birthday: '1994-09-02',
-      snoozedUntil: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-      createdAt: new Date().toISOString(),
-    }
-  ];
-
-  const DEFAULT_LOGS = [
-    {
-      id: 'log-1',
-      contactId: 'contact-1',
-      contactName: 'Mom',
-      medium: 'FaceTime',
-      initiator: 'outgoing',
-      summary: 'Had a quick 15-min catchup. Shared photos from Sunday park walk.',
-      location: 'Home',
-      photoDataUrl: null,
-      occurredAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-    },
-    {
-      id: 'log-2',
-      contactId: 'contact-2',
-      contactName: 'Alex Rivera',
-      medium: 'iMessage',
-      initiator: 'incoming',
-      summary: 'Sent congrats message for new job role!',
-      location: 'SF Office',
-      photoDataUrl: null,
-      occurredAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
-    }
-  ];
+  const DEFAULT_CONTACTS = [];
+  const DEFAULT_LOGS = [];
 
   const MEDIUM_CONFIG = {
     iMessage: { icon: 'fa-comment', color: '#007AFF' },
@@ -1519,6 +1434,19 @@ googleProvider.setCustomParameters({ prompt: 'select_account' });
         }
       });
     }
+
+    function clearAllData() {
+      if (confirm('Are you sure you want to delete all contacts and memory logs? This action cannot be undone.')) {
+        state.contacts = [];
+        state.logs = [];
+        saveContacts();
+        saveLogs();
+        renderAll();
+        alert('✓ All contacts and memory logs cleared!');
+      }
+    }
+
+    document.getElementById('btn-clear-all-data')?.addEventListener('click', clearAllData);
 
     document.getElementById('btn-copy-shortcut-url')?.addEventListener('click', () => {
       const txt = document.getElementById('shortcut-url-example').textContent;

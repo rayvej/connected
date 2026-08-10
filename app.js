@@ -4,16 +4,15 @@
   'use strict';
 
   // ── CONSTANTS & STORAGE KEYS ──
-  const STORAGE_KEY_CONTACTS = 'connected_contacts_v4';
-  const STORAGE_KEY_LOGS = 'connected_logs_v4';
-  const STORAGE_KEY_CATEGORIES = 'connected_categories_v4';
-  const STORAGE_KEY_THEME = 'connected_theme_v4';
+  const STORAGE_KEY_CONTACTS = 'connected_contacts_v5';
+  const STORAGE_KEY_LOGS = 'connected_logs_v5';
+  const STORAGE_KEY_CATEGORIES = 'connected_categories_v5';
+  const STORAGE_KEY_THEME = 'connected_theme_v5';
   const STORAGE_KEY_AUTH = 'connected_auth_state_v1';
   const STORAGE_KEY_PIN = 'connected_pin_code_v1';
 
   const DEFAULT_PIN = '1234';
 
-  // Seed Categories
   const DEFAULT_CATEGORIES = [
     { id: 'cat-1', name: 'Family' },
     { id: 'cat-2', name: 'Close Friends' },
@@ -21,7 +20,6 @@
     { id: 'cat-4', name: 'Mentors' },
   ];
 
-  // Seed Contacts with Birthday, Notes, and Pinned status
   const DEFAULT_CONTACTS = [
     {
       id: 'contact-1',
@@ -35,6 +33,7 @@
       notes: 'Loves garden updates. Remind her about upcoming weekend lunch.',
       isPinned: true,
       birthday: '1965-08-15',
+      snoozedUntil: null,
       createdAt: new Date().toISOString(),
     },
     {
@@ -49,6 +48,7 @@
       notes: 'Recently changed jobs to Senior PM. Asked about onboarding.',
       isPinned: false,
       birthday: '1992-11-20',
+      snoozedUntil: null,
       createdAt: new Date().toISOString(),
     },
     {
@@ -63,6 +63,7 @@
       notes: 'Planning family reunion trip next summer.',
       isPinned: false,
       birthday: '',
+      snoozedUntil: null,
       createdAt: new Date().toISOString(),
     },
     {
@@ -77,6 +78,7 @@
       notes: 'Traveling in Tokyo until end of month.',
       isPinned: false,
       birthday: '1994-09-02',
+      snoozedUntil: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // Snoozed 1 week
       createdAt: new Date().toISOString(),
     }
   ];
@@ -90,6 +92,7 @@
       initiator: 'outgoing',
       summary: 'Had a quick 15-min catchup. Shared photos from Sunday park walk.',
       location: 'Home',
+      photoDataUrl: null,
       occurredAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
     },
     {
@@ -100,6 +103,7 @@
       initiator: 'incoming',
       summary: 'Sent congrats message for new job role!',
       location: 'SF Office',
+      photoDataUrl: null,
       occurredAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
     }
   ];
@@ -125,9 +129,10 @@
     activeTab: 'recency',
     selectedMedium: 'iMessage',
     selectedQuickContactId: null,
-    selectedInitiator: 'outgoing', // 'outgoing' (I reached out) vs 'incoming' (They reached out)
+    selectedInitiator: 'outgoing',
     selectedFormFreq: 'Monthly',
     isFormVipPinned: false,
+    quickLogPhotoDataUrl: null,
     isDarkMode: true,
     // Security & Auth
     isAuthenticated: false,
@@ -188,7 +193,6 @@
 
   function sortContactsByRecency() {
     state.contacts.sort((a, b) => {
-      // Pinned contacts sit at top
       if (a.isPinned && !b.isPinned) return -1;
       if (!a.isPinned && b.isPinned) return 1;
 
@@ -198,7 +202,6 @@
     });
   }
 
-  // ── RELATIVE TIME HELPER ──
   function formatRelativeTime(isoDate) {
     if (!isoDate) return 'Never';
     const now = Date.now();
@@ -217,6 +220,23 @@
     if (!isoDate) return '';
     const d = new Date(isoDate);
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+
+  // FEATURE #6: Snooze Helper
+  function snoozeContact(contactId, days) {
+    const c = state.contacts.find(x => x.id === contactId);
+    if (!c) return;
+
+    const futureDate = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
+    c.snoozedUntil = futureDate;
+    saveContacts();
+    renderAll();
+    openPersonDossierModal(contactId);
+  }
+
+  function isContactSnoozed(contact) {
+    if (!contact.snoozedUntil) return false;
+    return new Date(contact.snoozedUntil).getTime() > Date.now();
   }
 
   // ── SECURITY & AUTH CONTROLLER ──
@@ -398,6 +418,7 @@
     renderRecencyContacts();
     renderInsightsTab();
     renderMemoriesList();
+    renderWidgetPreview();
     updateShortcutUrlDisplay();
   }
 
@@ -462,17 +483,22 @@
     filtered.forEach(c => {
       const mediumIcon = MEDIUM_CONFIG[c.lastMedium]?.icon || 'fa-comment';
       const relTime = formatRelativeTime(c.lastContactedAt);
+      const snoozed = isContactSnoozed(c);
 
       const initiatorBadge = c.lastInitiator === 'incoming'
         ? `<span class="initiator-badge-incoming"><i class="fa-solid fa-inbox"></i> They reached out</span>`
         : `<span class="initiator-badge-outgoing"><i class="fa-solid fa-paper-plane"></i> I reached out</span>`;
+
+      const snoozeBadge = snoozed
+        ? `<span class="snooze-badge"><i class="fa-solid fa-moon"></i> Snoozed until ${formatDateShort(c.snoozedUntil)}</span>`
+        : '';
 
       html += `
         <div class="glass-card p-4 cursor-pointer touch-active contact-item" data-id="${c.id}">
           <div class="flex items-center justify-between gap-2">
             <div class="flex items-center gap-2 min-w-0">
               ${c.isPinned ? `<i class="fa-solid fa-star text-xs text-[var(--gold)]"></i>` : ''}
-              <h3 class="text-[17.5px] font-bold tracking-tight truncate open-dossier-btn" data-id="${c.id}" style="font-family: var(--font-header); color: var(--gold)">
+              <h3 class="text-[17.5px] font-bold tracking-tight truncate" style="font-family: var(--font-header); color: var(--gold)">
                 ${c.name}
               </h3>
               <span class="px-2 py-0.5 rounded-md text-[10px] font-mono font-semibold" style="background: var(--bg-elevated); color: var(--text-secondary); border: 1px solid var(--border)">
@@ -495,6 +521,7 @@
                 </span>
               ` : ''}
               ${initiatorBadge}
+              ${snoozeBadge}
             </div>
 
             <span class="text-[11px] font-mono text-[var(--text-tertiary)]">
@@ -513,7 +540,6 @@
 
     container.innerHTML = html;
 
-    // Attach card click listener to open Person Dossier Modal
     container.querySelectorAll('.contact-item').forEach(card => {
       card.addEventListener('click', () => {
         const id = card.getAttribute('data-id');
@@ -522,13 +548,11 @@
     });
   }
 
-  // ── INSIGHTS & ANALYTICS TAB RENDER ──
   function renderInsightsTab() {
     const matrixContainer = document.getElementById('insights-matrix-container');
     const birthdayContainer = document.getElementById('insights-birthdays-container');
     if (!matrixContainer) return;
 
-    // 1. Calculate Category Touchpoint Balance Matrix
     const catCounts = {};
     state.categories.forEach(cat => catCounts[cat.name] = 0);
     state.contacts.forEach(c => {
@@ -555,7 +579,6 @@
     });
     matrixContainer.innerHTML = matrixHtml;
 
-    // 2. Upcoming Birthdays
     if (birthdayContainer) {
       const withBirthdays = state.contacts.filter(c => c.birthday);
       if (withBirthdays.length === 0) {
@@ -627,6 +650,12 @@
             ${log.summary}
           </p>
 
+          ${log.photoDataUrl ? `
+            <div class="mt-2.5 rounded-xl overflow-hidden border" style="border-color: var(--border)">
+              <img src="${log.photoDataUrl}" class="w-full h-44 object-cover" alt="Attached Memory Photo">
+            </div>
+          ` : ''}
+
           ${log.location ? `
             <div class="text-[11px] font-mono text-[var(--gold)] mt-1.5">
               <i class="fa-solid fa-location-dot text-[10px]"></i> ${log.location}
@@ -637,6 +666,31 @@
             <span>${formatDateShort(log.occurredAt)}</span>
             <span>${formatRelativeTime(log.occurredAt)}</span>
           </div>
+        </div>
+      `;
+    });
+
+    container.innerHTML = html;
+  }
+
+  // FEATURE #10: iPhone Home Screen Widget Simulation Preview Renderer
+  function renderWidgetPreview() {
+    const container = document.getElementById('widget-contacts-preview');
+    if (!container) return;
+
+    const upcoming = state.contacts.slice(0, 3);
+    let html = '';
+
+    upcoming.forEach(c => {
+      const relTime = formatRelativeTime(c.lastContactedAt);
+      const snoozed = isContactSnoozed(c);
+      html += `
+        <div class="flex items-center justify-between p-2 rounded-xl bg-white/5 border border-white/10">
+          <div class="flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full ${snoozed ? 'bg-amber-400' : 'bg-emerald-400'}"></span>
+            <span class="font-semibold text-[var(--text-primary)]">${c.name}</span>
+          </div>
+          <span class="text-[10px] text-[var(--gold)]">${snoozed ? '😴 Snoozed' : relTime}</span>
         </div>
       `;
     });
@@ -659,7 +713,15 @@
     document.getElementById('dossier-target-freq').textContent = contact.targetFrequency;
     document.getElementById('dossier-notes-text').textContent = contact.notes || 'No memory notes added yet.';
 
-    // Populate full timeline history
+    const snoozeStatusEl = document.getElementById('dossier-snooze-status');
+    if (snoozeStatusEl) {
+      if (isContactSnoozed(contact)) {
+        snoozeStatusEl.textContent = `😴 Snoozed till ${formatDateShort(contact.snoozedUntil)}`;
+      } else {
+        snoozeStatusEl.textContent = 'Active Reminders';
+      }
+    }
+
     const timelineContainer = document.getElementById('dossier-timeline-container');
     const personLogs = state.logs.filter(l => l.contactId === contactId);
 
@@ -676,6 +738,7 @@
               <span class="medium-badge"><i class="fa-solid ${mediumIcon} text-[10px]"></i> Via ${l.medium}</span>
             </div>
             <p class="text-[12.5px] text-[var(--text-primary)] leading-relaxed">${l.summary}</p>
+            ${l.photoDataUrl ? `<img src="${l.photoDataUrl}" class="w-full h-32 object-cover rounded-lg mt-1 border border-white/10" alt="Memory Photo">` : ''}
           </div>
         `;
       });
@@ -690,15 +753,16 @@
     if (modal) modal.classList.add('hidden');
   }
 
-  // ── MODAL 1: QUICK LOG CONTROLLER (WITH INITIATOR TOGGLE & LOCATION) ──
+  // ── MODAL 1: QUICK LOG CONTROLLER ──
   function openQuickLogModal(preselectedId = null) {
     const modal = document.getElementById('modal-quick-log');
     if (!modal) return;
 
     state.selectedQuickContactId = preselectedId || (state.contacts[0] ? state.contacts[0].id : null);
     state.selectedMedium = 'iMessage';
-    state.selectedInitiator = 'outgoing'; // Default: I reached out
+    state.selectedInitiator = 'outgoing';
     state.quickPersonSearchQuery = '';
+    state.quickLogPhotoDataUrl = null;
 
     const searchInput = document.getElementById('quicklog-search-input');
     if (searchInput) searchInput.value = '';
@@ -706,6 +770,12 @@
     document.getElementById('quicklog-note-input').value = '';
     const locInput = document.getElementById('quicklog-location-input');
     if (locInput) locInput.value = '';
+
+    const photoPreview = document.getElementById('quicklog-photo-preview-container');
+    if (photoPreview) photoPreview.classList.add('hidden');
+
+    const photoLabel = document.getElementById('quicklog-photo-label');
+    if (photoLabel) photoLabel.textContent = 'Choose Photo';
 
     updateInitiatorToggleUI();
     renderQuickLogChips();
@@ -835,6 +905,7 @@
       initiator: state.selectedInitiator,
       summary: noteInput || `Checked in via ${state.selectedMedium}`,
       location: locInput,
+      photoDataUrl: state.quickLogPhotoDataUrl,
       occurredAt: nowIso,
     };
 
@@ -844,6 +915,7 @@
     contact.lastContactedAt = nowIso;
     contact.lastMedium = state.selectedMedium;
     contact.lastInitiator = state.selectedInitiator;
+    contact.snoozedUntil = null; // Clear snooze on new check-in
     saveContacts();
     sortContactsByRecency();
 
@@ -858,6 +930,36 @@
       else scheme = `sms:${contact.phone}`;
       window.open(scheme, '_blank');
     }
+  }
+
+  // FEATURE #8: Photo Attachment File Reader Handler
+  function handlePhotoUpload(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function (evt) {
+      state.quickLogPhotoDataUrl = evt.target.result;
+      const previewContainer = document.getElementById('quicklog-photo-preview-container');
+      const previewImg = document.getElementById('quicklog-photo-img');
+      const photoLabel = document.getElementById('quicklog-photo-label');
+
+      if (previewImg) previewImg.src = evt.target.result;
+      if (previewContainer) previewContainer.classList.remove('hidden');
+      if (photoLabel) photoLabel.textContent = 'Photo Attached';
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function removePhotoAttachment() {
+    state.quickLogPhotoDataUrl = null;
+    const previewContainer = document.getElementById('quicklog-photo-preview-container');
+    const photoInput = document.getElementById('quicklog-photo-input');
+    const photoLabel = document.getElementById('quicklog-photo-label');
+
+    if (previewContainer) previewContainer.classList.add('hidden');
+    if (photoInput) photoInput.value = '';
+    if (photoLabel) photoLabel.textContent = 'Choose Photo';
   }
 
   // ── MODAL 2: CONTACT FORM CONTROLLER ──
@@ -1007,6 +1109,7 @@
         lastInitiator: 'outgoing',
         notes,
         isPinned: state.isFormVipPinned,
+        snoozedUntil: null,
         createdAt: new Date().toISOString(),
       };
       state.contacts.unshift(newContact);
@@ -1033,7 +1136,7 @@
   // ── JSON EXPORT & IMPORT ──
   function exportJSONData() {
     const exportObj = {
-      version: '2.4',
+      version: '2.5',
       exportDate: new Date().toISOString(),
       categories: state.categories,
       contacts: state.contacts,
@@ -1169,7 +1272,6 @@
       });
     }
 
-    // Initiator Direction Toggle
     document.getElementById('btn-init-outgoing')?.addEventListener('click', () => {
       state.selectedInitiator = 'outgoing';
       updateInitiatorToggleUI();
@@ -1180,20 +1282,31 @@
       updateInitiatorToggleUI();
     });
 
-    // Voice Dictation Button
     document.getElementById('btn-start-dictation')?.addEventListener('click', toggleVoiceDictation);
 
-    // VIP Star Pin Toggle
+    // FEATURE #8: Photo Attachment Input Bindings
+    document.getElementById('quicklog-photo-input')?.addEventListener('change', handlePhotoUpload);
+    document.getElementById('btn-remove-photo')?.addEventListener('click', removePhotoAttachment);
+
+    // FEATURE #6: Snooze Actions
+    document.getElementById('btn-snooze-3d')?.addEventListener('click', () => {
+      if (state.dossierContactId) snoozeContact(state.dossierContactId, 3);
+    });
+    document.getElementById('btn-snooze-1w')?.addEventListener('click', () => {
+      if (state.dossierContactId) snoozeContact(state.dossierContactId, 7);
+    });
+    document.getElementById('btn-snooze-1m')?.addEventListener('click', () => {
+      if (state.dossierContactId) snoozeContact(state.dossierContactId, 30);
+    });
+
     document.getElementById('btn-toggle-vip-pin')?.addEventListener('click', () => {
       state.isFormVipPinned = !state.isFormVipPinned;
       updateVipStarButtonUI();
     });
 
-    // JSON Export / Import
     document.getElementById('btn-export-json')?.addEventListener('click', exportJSONData);
     document.getElementById('file-import-json')?.addEventListener('change', importJSONData);
 
-    // Dossier Modal Buttons
     document.getElementById('btn-close-dossier')?.addEventListener('click', closePersonDossierModal);
     document.getElementById('btn-dossier-quicklog')?.addEventListener('click', () => {
       closePersonDossierModal();
@@ -1205,29 +1318,23 @@
       openContactFormModal(id);
     });
 
-    // 5 Symmetrical Tabs
     document.getElementById('tab-btn-recency')?.addEventListener('click', () => switchTab('recency'));
     document.getElementById('tab-btn-insights')?.addEventListener('click', () => switchTab('insights'));
     document.getElementById('tab-btn-memories')?.addEventListener('click', () => switchTab('memories'));
     document.getElementById('tab-btn-settings')?.addEventListener('click', () => switchTab('settings'));
 
-    // Open Modals
     document.getElementById('btn-open-quick-log')?.addEventListener('click', () => openQuickLogModal());
     document.getElementById('btn-open-add-contact')?.addEventListener('click', () => openContactFormModal());
 
-    // Close Modals
     document.getElementById('btn-close-quick-log')?.addEventListener('click', closeQuickLogModal);
     document.getElementById('btn-close-contact-form')?.addEventListener('click', closeContactFormModal);
 
-    // Modal Action Saves
     document.getElementById('btn-save-quick-log')?.addEventListener('click', () => saveQuickLog(false));
     document.getElementById('btn-save-and-launch-log')?.addEventListener('click', () => saveQuickLog(true));
 
-    // Form Submit
     document.getElementById('contact-form')?.addEventListener('submit', handleSaveContactSubmit);
     document.getElementById('btn-delete-contact')?.addEventListener('click', handleDeleteContactSubmit);
 
-    // Add New Group inline
     document.getElementById('btn-toggle-add-cat')?.addEventListener('click', () => {
       const container = document.getElementById('add-cat-inline-input');
       container?.classList.toggle('hidden');
@@ -1246,7 +1353,6 @@
       }
     });
 
-    // SW Update & Force Reload
     const btnCheckSw = document.getElementById('btn-check-sw-update');
     const btnForceReload = document.getElementById('btn-force-reload-app');
     const swStatus = document.getElementById('sw-update-status');
@@ -1290,7 +1396,6 @@
       });
     }
 
-    // Copy Shortcut URL
     document.getElementById('btn-copy-shortcut-url')?.addEventListener('click', () => {
       const txt = document.getElementById('shortcut-url-example').textContent;
       navigator.clipboard.writeText(txt);

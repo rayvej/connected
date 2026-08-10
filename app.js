@@ -8,6 +8,7 @@ import { firebaseConfig } from './firebase-config.js';
 const fbApp = initializeApp(firebaseConfig);
 const fbAuth = getAuth(fbApp);
 const googleProvider = new GoogleAuthProvider();
+googleProvider.setCustomParameters({ prompt: 'select_account' });
 
 (function () {
   'use strict';

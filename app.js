@@ -8,6 +8,10 @@
   const STORAGE_KEY_LOGS = 'connected_logs_v3';
   const STORAGE_KEY_CATEGORIES = 'connected_categories_v3';
   const STORAGE_KEY_THEME = 'connected_theme_v3';
+  const STORAGE_KEY_AUTH = 'connected_auth_state_v1';
+  const STORAGE_KEY_PIN = 'connected_pin_code_v1';
+
+  const DEFAULT_PIN = '1234';
 
   // Seed Categories
   const DEFAULT_CATEGORIES = [
@@ -17,7 +21,7 @@
     { id: 'cat-4', name: 'Mentors' },
   ];
 
-  // Seed Contacts with Realistic Notes
+  // Seed Contacts
   const DEFAULT_CONTACTS = [
     {
       id: 'contact-1',
@@ -84,7 +88,7 @@
     }
   ];
 
-  // Medium Config
+  // Medium Config (Including 'Other')
   const MEDIUM_CONFIG = {
     iMessage: { icon: 'fa-comment', color: '#007AFF' },
     Call: { icon: 'fa-phone', color: '#34C759' },
@@ -92,6 +96,7 @@
     FaceTime: { icon: 'fa-video', color: '#34C759' },
     WeChat: { icon: 'fa-comments', color: '#07C160' },
     'In-Person': { icon: 'fa-user-group', color: '#D4A359' },
+    Other: { icon: 'fa-ellipsis', color: '#9DA3AE' },
   };
 
   // ── APP STATE ──
@@ -101,11 +106,19 @@
     categories: [],
     selectedCategory: 'All',
     searchQuery: '',
+    quickPersonSearchQuery: '',
     activeTab: 'recency',
     selectedMedium: 'iMessage',
     selectedQuickContactId: null,
     selectedFormFreq: 'Monthly',
     isDarkMode: true,
+    // Security & Auth
+    isAuthenticated: false,
+    isPinUnlocked: false,
+    pinBuffer: '',
+    userPin: DEFAULT_PIN,
+    isRecordingSpeech: false,
+    speechRecognitionInstance: null,
   };
 
   // ── DATA SERVICE ──
@@ -137,7 +150,14 @@
       try { state.logs = JSON.parse(rawLogs); } catch { state.logs = DEFAULT_LOGS; }
     }
 
-    // Sort contacts strictly by recency (most recent check-in first)
+    // Saved PIN
+    const savedPin = localStorage.getItem(STORAGE_KEY_PIN);
+    if (savedPin) state.userPin = savedPin;
+
+    // Saved Auth
+    const savedAuth = localStorage.getItem(STORAGE_KEY_AUTH);
+    if (savedAuth === 'true') state.isAuthenticated = true;
+
     sortContactsByRecency();
   }
 
@@ -182,6 +202,84 @@
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   }
 
+  // ── SECURITY & AUTH CONTROLLER (Reading Tracker Style) ──
+  function checkSecurityState() {
+    const authScreen = document.getElementById('auth-screen');
+    const pinScreen = document.getElementById('pin-screen');
+
+    if (!state.isAuthenticated) {
+      if (authScreen) authScreen.classList.remove('hidden');
+      if (pinScreen) pinScreen.classList.add('hidden');
+      return;
+    }
+
+    if (authScreen) authScreen.classList.add('hidden');
+
+    if (!state.isPinUnlocked) {
+      if (pinScreen) pinScreen.classList.remove('hidden');
+      state.pinBuffer = '';
+      updatePinDots();
+      return;
+    }
+
+    if (pinScreen) pinScreen.classList.add('hidden');
+  }
+
+  function handleGoogleSignIn() {
+    state.isAuthenticated = true;
+    localStorage.setItem(STORAGE_KEY_AUTH, 'true');
+    checkSecurityState();
+  }
+
+  function handlePinInput(key) {
+    if (state.pinBuffer.length < 4) {
+      state.pinBuffer += key;
+      updatePinDots();
+    }
+
+    if (state.pinBuffer.length === 4) {
+      setTimeout(() => {
+        if (state.pinBuffer === state.userPin) {
+          state.isPinUnlocked = true;
+          const pinErr = document.getElementById('pin-error');
+          if (pinErr) pinErr.classList.add('hidden');
+          checkSecurityState();
+        } else {
+          // Incorrect PIN
+          const pinErr = document.getElementById('pin-error');
+          if (pinErr) pinErr.classList.remove('hidden');
+          state.pinBuffer = '';
+          updatePinDots();
+        }
+      }, 150);
+    }
+  }
+
+  function handlePinBackspace() {
+    if (state.pinBuffer.length > 0) {
+      state.pinBuffer = state.pinBuffer.slice(0, -1);
+      updatePinDots();
+    }
+  }
+
+  function updatePinDots() {
+    const dots = document.querySelectorAll('.pin-dot');
+    dots.forEach((dot, idx) => {
+      if (idx < state.pinBuffer.length) {
+        dot.style.backgroundColor = 'var(--gold)';
+        dot.style.borderColor = 'var(--gold)';
+      } else {
+        dot.style.backgroundColor = 'transparent';
+        dot.style.borderColor = 'var(--border-strong)';
+      }
+    });
+  }
+
+  function lockAppNow() {
+    state.isPinUnlocked = false;
+    checkSecurityState();
+  }
+
   // ── THEME CONTROLLER ──
   function initTheme() {
     const saved = localStorage.getItem(STORAGE_KEY_THEME);
@@ -208,6 +306,77 @@
     const icon = document.getElementById('theme-icon');
     if (icon) {
       icon.className = `fa-solid ${isDark ? 'fa-moon' : 'fa-sun'}`;
+    }
+  }
+
+  // ── VOICE DICTATION CONTROLLER (Web Speech API) ──
+  function initVoiceDictation() {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      const btn = document.getElementById('btn-start-dictation');
+      if (btn) btn.title = 'Voice dictation not supported in this browser';
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = 'en-US';
+
+    recognition.onstart = function () {
+      state.isRecordingSpeech = true;
+      updateDictationButtonUI(true);
+    };
+
+    recognition.onend = function () {
+      state.isRecordingSpeech = false;
+      updateDictationButtonUI(false);
+    };
+
+    recognition.onresult = function (event) {
+      const transcript = event.results[0][0].transcript;
+      const noteInput = document.getElementById('quicklog-note-input');
+      if (noteInput) {
+        const existing = noteInput.value.trim();
+        noteInput.value = existing ? `${existing} ${transcript}` : transcript;
+      }
+    };
+
+    recognition.onerror = function () {
+      state.isRecordingSpeech = false;
+      updateDictationButtonUI(false);
+    };
+
+    state.speechRecognitionInstance = recognition;
+  }
+
+  function toggleVoiceDictation() {
+    if (!state.speechRecognitionInstance) {
+      alert('Voice dictation speech recognition is not available in your browser.');
+      return;
+    }
+
+    if (state.isRecordingSpeech) {
+      state.speechRecognitionInstance.stop();
+    } else {
+      state.speechRecognitionInstance.start();
+    }
+  }
+
+  function updateDictationButtonUI(isRecording) {
+    const btn = document.getElementById('btn-start-dictation');
+    const label = document.getElementById('dictation-label');
+    const icon = document.getElementById('dictation-icon');
+    if (!btn) return;
+
+    if (isRecording) {
+      btn.classList.add('mic-recording');
+      if (label) label.textContent = 'Listening...';
+      if (icon) icon.className = 'fa-solid fa-microphone-lines text-[11px] animate-pulse';
+    } else {
+      btn.classList.remove('mic-recording');
+      if (label) label.textContent = 'Dictate';
+      if (icon) icon.className = 'fa-solid fa-microphone text-[11px]';
     }
   }
 
@@ -240,7 +409,6 @@
 
     container.innerHTML = html;
 
-    // Attach pill click listeners
     container.querySelectorAll('.cat-pill').forEach(btn => {
       btn.addEventListener('click', () => {
         state.selectedCategory = btn.getAttribute('data-cat') || 'All';
@@ -255,7 +423,6 @@
     const countEl = document.getElementById('recency-count');
     if (!container) return;
 
-    // Filter
     const filtered = state.contacts.filter(c => {
       const matchesSearch = c.name.toLowerCase().includes(state.searchQuery.toLowerCase()) ||
         (c.category && c.category.toLowerCase().includes(state.searchQuery.toLowerCase())) ||
@@ -325,7 +492,6 @@
 
     container.innerHTML = html;
 
-    // Attach card click listeners to edit contact
     container.querySelectorAll('.contact-item').forEach(card => {
       card.addEventListener('click', () => {
         const id = card.getAttribute('data-id');
@@ -386,13 +552,18 @@
     container.innerHTML = html;
   }
 
-  // ── MODAL 1: QUICK LOG CONTROLLER ──
+  // ── MODAL 1: QUICK LOG CONTROLLER (SEARCH + TOP 10 BUBBLES + OTHER MEDIUM) ──
   function openQuickLogModal(preselectedId = null) {
     const modal = document.getElementById('modal-quick-log');
     if (!modal) return;
 
     state.selectedQuickContactId = preselectedId || (state.contacts[0] ? state.contacts[0].id : null);
     state.selectedMedium = 'iMessage';
+    state.quickPersonSearchQuery = '';
+
+    const searchInput = document.getElementById('quicklog-search-input');
+    if (searchInput) searchInput.value = '';
+
     document.getElementById('quicklog-note-input').value = '';
 
     renderQuickLogChips();
@@ -404,14 +575,38 @@
   function closeQuickLogModal() {
     const modal = document.getElementById('modal-quick-log');
     if (modal) modal.classList.add('hidden');
+    if (state.isRecordingSpeech && state.speechRecognitionInstance) {
+      state.speechRecognitionInstance.stop();
+    }
   }
 
   function renderQuickLogChips() {
     const container = document.getElementById('quicklog-contacts-chips');
+    const bubbleCountEl = document.getElementById('quicklog-bubble-count');
     if (!container) return;
 
+    // Filter contacts based on quick log search query
+    let filtered = state.contacts.filter(c => {
+      return c.name.toLowerCase().includes(state.quickPersonSearchQuery.toLowerCase()) ||
+        (c.category && c.category.toLowerCase().includes(state.quickPersonSearchQuery.toLowerCase()));
+    });
+
+    // Limit to top 10 most recent contacts if no search query
+    if (!state.quickPersonSearchQuery) {
+      filtered = filtered.slice(0, 10);
+    }
+
+    if (bubbleCountEl) {
+      bubbleCountEl.textContent = `${filtered.length} name${filtered.length === 1 ? '' : 's'}`;
+    }
+
+    if (filtered.length === 0) {
+      container.innerHTML = `<span class="text-[12px] text-[var(--text-tertiary)] italic">No matching people</span>`;
+      return;
+    }
+
     let html = '';
-    state.contacts.forEach(c => {
+    filtered.forEach(c => {
       const isSel = c.id === state.selectedQuickContactId;
       html += `
         <button type="button" class="quick-contact-chip px-3 py-1.5 rounded-full text-[12.5px] font-semibold whitespace-nowrap touch-active transition-all ${isSel ? 'bg-[var(--gold)] text-[#181412] font-bold' : 'bg-[var(--bg-elevated)] text-[var(--text-secondary)] border border-[var(--border)]'}" data-id="${c.id}">
@@ -434,7 +629,7 @@
     const container = document.getElementById('quicklog-medium-grid');
     if (!container) return;
 
-    const mediums = ['iMessage', 'Call', 'WhatsApp', 'FaceTime', 'WeChat', 'In-Person'];
+    const mediums = ['iMessage', 'Call', 'WhatsApp', 'FaceTime', 'WeChat', 'In-Person', 'Other'];
     let html = '';
 
     mediums.forEach(m => {
@@ -488,7 +683,7 @@
     renderAll();
     closeQuickLogModal();
 
-    if (launchApp && contact.phone && state.selectedMedium !== 'In-Person') {
+    if (launchApp && contact.phone && state.selectedMedium !== 'In-Person' && state.selectedMedium !== 'Other') {
       let scheme = 'sms:';
       if (state.selectedMedium === 'Call') scheme = `tel:${contact.phone}`;
       else if (state.selectedMedium === 'FaceTime') scheme = `facetime:${contact.phone}`;
@@ -599,7 +794,6 @@
     if (!name) return;
 
     if (formId) {
-      // Edit
       const c = state.contacts.find(x => x.id === formId);
       if (c) {
         c.name = name;
@@ -609,7 +803,6 @@
         c.targetFrequency = state.selectedFormFreq;
       }
     } else {
-      // Add New
       const newContact = {
         id: `contact-${Date.now()}`,
         name,
@@ -692,11 +885,24 @@
 
   // ── EVENT BINDINGS ──
   function bindEvents() {
+    // Auth & PIN Screen Bindings
+    document.getElementById('btn-google-signin')?.addEventListener('click', handleGoogleSignIn);
+
+    document.querySelectorAll('.pin-key').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const key = btn.getAttribute('data-key');
+        if (key) handlePinInput(key);
+      });
+    });
+
+    document.getElementById('pin-backspace')?.addEventListener('click', handlePinBackspace);
+    document.getElementById('btn-lock-app-now')?.addEventListener('click', lockAppNow);
+
     // Theme toggle
     const themeBtn = document.getElementById('btn-theme-toggle');
     if (themeBtn) themeBtn.addEventListener('click', toggleTheme);
 
-    // Search input
+    // Main Search Input
     const searchInput = document.getElementById('search-input');
     if (searchInput) {
       searchInput.addEventListener('input', (e) => {
@@ -705,6 +911,18 @@
         renderMemoriesList();
       });
     }
+
+    // Quick Log Person Search Input
+    const quickSearchInput = document.getElementById('quicklog-search-input');
+    if (quickSearchInput) {
+      quickSearchInput.addEventListener('input', (e) => {
+        state.quickPersonSearchQuery = e.target.value.trim();
+        renderQuickLogChips();
+      });
+    }
+
+    // Voice Dictation Button
+    document.getElementById('btn-start-dictation')?.addEventListener('click', toggleVoiceDictation);
 
     // Tabs
     document.getElementById('tab-btn-recency')?.addEventListener('click', () => switchTab('recency'));
@@ -746,7 +964,7 @@
       }
     });
 
-    // Reading Tracker style PWA SW Update inspection controls
+    // SW Update & Force Reload
     const btnCheckSw = document.getElementById('btn-check-sw-update');
     const btnForceReload = document.getElementById('btn-force-reload-app');
     const swStatus = document.getElementById('sw-update-status');
@@ -754,7 +972,7 @@
     if (btnCheckSw) {
       btnCheckSw.addEventListener('click', async () => {
         btnCheckSw.disabled = true;
-        btnCheckSw.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-[11px]"></i> Checking...';
+        btnCheckSw.innerHTML = '<i class="fa-solid fa-rotate text-[11px] animate-spin"></i> Checking...';
 
         if ('serviceWorker' in navigator) {
           try {
@@ -806,7 +1024,9 @@
   document.addEventListener('DOMContentLoaded', () => {
     initTheme();
     loadData();
+    initVoiceDictation();
     bindEvents();
+    checkSecurityState();
     renderAll();
   });
 

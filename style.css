@@ -46,13 +46,13 @@
 [data-mode="light"] {
   --bg-solid: #FDFBF7;
   --bg-elevated: #F4EFE6;
-  --bg-card: rgba(255, 255, 255, 0.94);
-  --bg-input: rgba(60, 45, 30, 0.05);
+  --bg-card: #FFFFFF;
+  --bg-input: rgba(60, 45, 30, 0.07);
   --bg-input-focus: rgba(184, 122, 40, 0.15);
 
   --text-primary: #2C2219;
-  --text-secondary: #6B5B4C;
-  --text-tertiary: #9E8D7C;
+  --text-secondary: #4A3B2C; /* High contrast for light mode */
+  --text-tertiary: #6E5A46;  /* High contrast for light mode labels */
 
   --gold: #B87A28;
   --gold-rgb: 184, 122, 40;
@@ -60,9 +60,9 @@
   --accent: #B84A2A;
   --emerald: #4E7852;
 
-  --border: rgba(60, 45, 30, 0.12);
-  --border-strong: rgba(60, 45, 30, 0.25);
-  --shadow-card: 0 10px 25px -8px rgba(60, 45, 30, 0.12);
+  --border: rgba(60, 45, 30, 0.18);
+  --border-strong: rgba(60, 45, 30, 0.35);
+  --shadow-card: 0 10px 25px -8px rgba(60, 45, 30, 0.15);
 }
 
 * {
@@ -75,7 +75,7 @@
 }
 
 html, body {
-  background-color: #0d0b0a;
+  background-color: var(--bg-solid);
   color: var(--text-primary);
   min-height: 100vh;
   width: 100%;
@@ -130,6 +130,16 @@ html, body {
   border-bottom: 1px solid var(--border);
 }
 
+.glass-sheet {
+  background: var(--bg-elevated);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  border-top-left-radius: 24px;
+  border-top-right-radius: 24px;
+  border-top: 1px solid var(--border-strong);
+  box-shadow: 0 -16px 50px rgba(0, 0, 0, 0.7);
+}
+
 .glass-tab-bar {
   background: var(--bg-card);
   backdrop-filter: var(--blur);
@@ -162,6 +172,19 @@ html, body {
   border: 1px solid var(--border-strong);
   background: rgba(var(--gold-rgb), 0.12);
   color: var(--gold);
+}
+
+/* Microphone Pulse Animation */
+@keyframes micPulse {
+  0% { box-shadow: 0 0 0 0 rgba(225, 29, 72, 0.6); }
+  70% { box-shadow: 0 0 0 10px rgba(225, 29, 72, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(225, 29, 72, 0); }
+}
+
+.mic-recording {
+  animation: micPulse 1.5s infinite;
+  background-color: #E11D48 !important;
+  color: #FFFFFF !important;
 }
 
 .touch-active {

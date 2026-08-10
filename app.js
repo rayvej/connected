@@ -967,9 +967,6 @@ googleProvider.setCustomParameters({ prompt: 'select_account' });
     if (searchInput) searchInput.value = '';
 
     document.getElementById('quicklog-note-input').value = '';
-    const locInput = document.getElementById('quicklog-location-input');
-    if (locInput) locInput.value = '';
-
     const photoPreview = document.getElementById('quicklog-photo-preview-container');
     if (photoPreview) photoPreview.classList.add('hidden');
 
@@ -1093,7 +1090,6 @@ googleProvider.setCustomParameters({ prompt: 'select_account' });
     if (!contact) return;
 
     const noteInput = document.getElementById('quicklog-note-input').value.trim();
-    const locInput = document.getElementById('quicklog-location-input')?.value.trim() || '';
     const nowIso = new Date().toISOString();
 
     const newLog = {
@@ -1103,7 +1099,6 @@ googleProvider.setCustomParameters({ prompt: 'select_account' });
       medium: state.selectedMedium,
       initiator: state.selectedInitiator,
       summary: noteInput || `Checked in via ${state.selectedMedium}`,
-      location: locInput,
       photoDataUrl: state.quickLogPhotoDataUrl,
       audioDataUrl: state.quickLogAudioDataUrl,
       occurredAt: nowIso,

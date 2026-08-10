@@ -1,3 +1,13 @@
 @import "tailwindcss";
 @import "./styles/tokens.css";
 @import "./styles/glass.css";
+
+/* Reading Tracker Desktop Centering Guarantee */
+#root {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  background-color: #0d0b0a;
+}

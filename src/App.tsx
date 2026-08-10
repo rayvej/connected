@@ -34,7 +34,7 @@ export function App() {
   useEffect(() => {
     refreshData();
 
-    // Deep link shortcut parser (e.g. ?quicklog=true&contact=Mom&medium=iMessage)
+    // Shortcut parser (e.g. ?quicklog=true&contact=Mom&medium=iMessage)
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('quicklog') === 'true' || urlParams.get('quicklog') === '1') {
       const contactName = urlParams.get('contact');
@@ -115,7 +115,7 @@ export function App() {
   }
 
   return (
-    <div className="min-h-screen bg-[var(--bg-solid)] text-[var(--text-primary)] relative overflow-x-hidden">
+    <div className="w-full min-h-screen bg-[#0d0b0a] text-[var(--text-primary)] relative flex justify-center">
       <div className="frosted-bg-overlay" />
 
       {/* Ambient background glow blobs (Reading Tracker style) */}
@@ -125,8 +125,8 @@ export function App() {
         <div className="absolute -bottom-24 left-[5%] w-[260px] h-[260px] rounded-full bg-amber-500/8 blur-[120px] animate-float-1" />
       </div>
 
-      {/* Responsive iPhone Container (max-w-[448px] centering on Desktop) */}
-      <div className="relative z-10 flex flex-col min-h-screen max-w-[448px] mx-auto border-x border-[var(--border-color)] bg-[var(--bg-solid)] shadow-2xl">
+      {/* Reading Tracker Mobile Handset Container (max-w-[448px] centered on Desktop) */}
+      <div className="relative z-10 flex flex-col min-h-screen w-full max-w-[448px] border-x border-[var(--border)] bg-[#181412] shadow-2xl overflow-x-hidden">
         {/* Header */}
         <HeaderBlur
           searchQuery={searchQuery}
@@ -140,13 +140,16 @@ export function App() {
           }}
         />
 
-        {/* Main Tab View Area */}
+        {/* Main View Area */}
         <main className="px-4 pt-3 flex-1">
           {/* 1. RECENCY DASHBOARD TAB */}
           {activeTab === 'dashboard' && (
             <div className="space-y-3 pb-24">
               <div className="flex items-center justify-between px-1">
-                <h2 className="text-[13px] font-serif font-bold text-[var(--gold)] uppercase tracking-wider">
+                <h2 
+                  className="text-[14px] font-bold uppercase tracking-wider"
+                  style={{ fontFamily: 'var(--font-header)', color: 'var(--gold)' }}
+                >
                   Check-In Recency ({filteredContacts.length})
                 </h2>
                 <span className="text-[11px] font-mono text-[var(--text-tertiary)]">
@@ -156,7 +159,7 @@ export function App() {
 
               {filteredContacts.length === 0 ? (
                 <div className="text-center py-16 text-[var(--text-secondary)]">
-                  <p className="text-[15px] font-serif font-bold text-[var(--text-primary)]">
+                  <p className="text-[16px] font-serif font-bold text-[var(--text-primary)]">
                     No contacts found
                   </p>
                   <p className="text-[12px] opacity-75 mt-1">
@@ -208,7 +211,7 @@ export function App() {
         onSaveLog={handleSaveLog}
       />
 
-      {/* Contact Form Sheet (Add/Edit) */}
+      {/* Contact Form Sheet */}
       <ContactFormSheet
         isOpen={isContactFormOpen}
         onClose={() => setIsContactFormOpen(false)}

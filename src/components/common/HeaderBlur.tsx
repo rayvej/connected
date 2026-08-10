@@ -21,26 +21,39 @@ export const HeaderBlur: React.FC<HeaderBlurProps> = ({
   onAddContactClick,
 }) => {
   return (
-    <header className="glass-header px-4 pt-3.5 pb-2.5 space-y-2.5">
+    <header className="glass-header px-4 pt-3.5 pb-3 space-y-3">
       {/* Title & Brand Row */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
-          <img src="/app-logo.jpg" alt="Logo" className="w-8 h-8 rounded-xl object-cover border border-[var(--border-strong)]" />
-          <h1 className="text-[22px] font-serif font-bold text-[var(--gold)] tracking-tight">
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <img 
+            src="/app-logo.jpg" 
+            alt="Sunset Logo" 
+            className="w-8 h-8 rounded-xl object-cover border" 
+            style={{ borderColor: 'var(--border-strong)' }}
+          />
+          <h1 
+            className="text-[22px] font-bold tracking-tight truncate"
+            style={{ fontFamily: 'var(--font-header)', color: 'var(--gold)' }}
+          >
             Connected
           </h1>
         </div>
 
         <button
           onClick={onAddContactClick}
-          className="px-3 py-1.5 rounded-full bg-[var(--gold-muted)] text-[var(--gold)] border border-[var(--border-strong)] font-semibold text-[12px] flex items-center gap-1 touch-active"
+          className="px-3 py-1.5 rounded-full font-semibold text-[12px] flex items-center gap-1 touch-active flex-shrink-0"
+          style={{
+            background: 'rgba(212, 163, 89, 0.15)',
+            color: 'var(--gold)',
+            border: '1px solid var(--border-strong)'
+          }}
         >
           <Plus size={14} />
           <span>Add Person</span>
         </button>
       </div>
 
-      {/* Top Search Input (Option C) */}
+      {/* Top Search Bar */}
       <div className="relative">
         <Search
           size={16}
@@ -50,8 +63,13 @@ export const HeaderBlur: React.FC<HeaderBlurProps> = ({
           type="text"
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
-          placeholder="Search people, groups, memories, notes..."
-          className="w-full pl-9 pr-3.5 py-2 rounded-xl bg-[var(--bg-card-secondary)] border border-[var(--border-color)] text-[13.5px] text-[var(--text-primary)] placeholder-[var(--text-tertiary)] outline-none focus:border-[var(--gold)] transition-all"
+          placeholder="Search people, groups, notes..."
+          className="w-full pl-9 pr-3.5 py-2 rounded-xl text-[13.5px] outline-none transition-all"
+          style={{
+            background: 'var(--bg-input)',
+            border: '1px solid var(--border)',
+            color: 'var(--text-primary)'
+          }}
         />
       </div>
 
@@ -61,8 +79,8 @@ export const HeaderBlur: React.FC<HeaderBlurProps> = ({
           onClick={() => onSelectCategory('All')}
           className={`px-3 py-1 rounded-full text-[11.5px] font-semibold whitespace-nowrap touch-active transition-all ${
             selectedCategory === 'All'
-              ? 'bg-[var(--gold)] text-black font-bold'
-              : 'bg-[var(--bg-card-secondary)] text-[var(--text-secondary)] border border-[var(--border-color)]'
+              ? 'bg-[var(--gold)] text-[#181412] font-bold'
+              : 'bg-[var(--bg-elevated)] text-[var(--text-secondary)] border border-[var(--border)]'
           }`}
         >
           All
@@ -76,8 +94,8 @@ export const HeaderBlur: React.FC<HeaderBlurProps> = ({
               onClick={() => onSelectCategory(cat.name)}
               className={`px-3 py-1 rounded-full text-[11.5px] font-semibold whitespace-nowrap touch-active transition-all ${
                 isSelected
-                  ? 'bg-[var(--gold)] text-black font-bold'
-                  : 'bg-[var(--bg-card-secondary)] text-[var(--text-secondary)] border border-[var(--border-color)]'
+                  ? 'bg-[var(--gold)] text-[#181412] font-bold'
+                  : 'bg-[var(--bg-elevated)] text-[var(--text-secondary)] border border-[var(--border)]'
               }`}
             >
               {cat.name}

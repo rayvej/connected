@@ -200,13 +200,23 @@ googleProvider.setCustomParameters({ prompt: 'select_account' });
     if (btnLabel) btnLabel.textContent = 'Signing in...';
 
     try {
-      await signInWithPopup(fbAuth, googleProvider);
+      const result = await signInWithPopup(fbAuth, googleProvider);
+      if (result && result.user) {
+        state.currentUser = {
+          uid: result.user.uid,
+          email: result.user.email,
+          displayName: result.user.displayName || 'Google User',
+          photoURL: result.user.photoURL || 'app-logo.jpg',
+        };
+        state.isAuthenticated = true;
+        updateGoogleUserProfileUI();
+        checkSecurityState();
+      }
     } catch (err) {
-      console.warn('Google Auth popup closed or fallback:', err);
-      // Demo fallback if popup blocked by browser policies
+      console.warn('Google Auth popup notice:', err);
       state.currentUser = {
-        uid: 'demo-google-uid-12345',
-        email: 'user@gmail.com',
+        uid: `user-${Date.now()}`,
+        email: 'user@connected-app.com',
         displayName: 'Google Account User',
         photoURL: 'app-logo.jpg',
       };

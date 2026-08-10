@@ -10,25 +10,30 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
+      includeAssets: ['app-logo.jpg', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png'],
+      workbox: {
+        skipWaiting: true,
+        clientsClaim: true,
+        cleanupOutdatedCaches: true,
+      },
       manifest: {
-        name: 'Connected — Personal Relationship Tracker',
+        name: 'Connected — Touchpoints & Memory Log',
         short_name: 'Connected',
-        description: 'Intimate, fast interaction logger and recency tracker for iOS',
-        theme_color: '#F2F2F7',
-        background_color: '#000000',
+        description: 'Intimate relationship tracker and memory log for iOS',
+        theme_color: '#0d0f14',
+        background_color: '#0d0f14',
         display: 'standalone',
         orientation: 'portrait',
         scope: './',
         start_url: './',
         icons: [
           {
-            src: 'pwa-192x192.png',
+            src: 'icon-192.png',
             sizes: '192x192',
             type: 'image/png'
           },
           {
-            src: 'pwa-512x512.png',
+            src: 'icon-512.png',
             sizes: '512x512',
             type: 'image/png'
           }

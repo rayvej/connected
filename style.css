@@ -72,6 +72,7 @@
   font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
   -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
 html, body {
@@ -79,6 +80,26 @@ html, body {
   color: var(--text-primary);
   min-height: 100vh;
   width: 100%;
+  overscroll-behavior: none;
+}
+
+/* Reading Tracker 16px Input Font Scaling (Stops iOS Safari Auto-Zoom Content Shift) */
+input, select, textarea {
+  font-size: 16px !important;
+}
+
+/* Safe Area Inset Protection for Headers */
+.glass-header {
+  padding-top: max(14px, calc(env(safe-area-inset-top, 0px) + 12px)) !important;
+  background: var(--bg-card);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  border-bottom: 1px solid var(--border);
+}
+
+/* Safe Area Bottom Clearance for Scrollable Views (Clears Bottom Tab Bar Completely) */
+main section {
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 115px) !important;
 }
 
 /* Background Ambient Glow Animations (Reading Tracker style) */
@@ -123,13 +144,6 @@ html, body {
   border-color: var(--border-strong);
 }
 
-.glass-header {
-  background: var(--bg-card);
-  backdrop-filter: var(--blur);
-  -webkit-backdrop-filter: var(--blur);
-  border-bottom: 1px solid var(--border);
-}
-
 .glass-sheet {
   background: var(--bg-elevated);
   backdrop-filter: var(--blur);
@@ -138,6 +152,7 @@ html, body {
   border-top-right-radius: 24px;
   border-top: 1px solid var(--border-strong);
   box-shadow: 0 -16px 50px rgba(0, 0, 0, 0.7);
+  padding-bottom: max(24px, calc(env(safe-area-inset-bottom, 0px) + 20px)) !important;
 }
 
 .glass-tab-bar {

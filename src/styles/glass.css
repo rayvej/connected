@@ -1,0 +1,89 @@
+/* Apple Glassmorphism & HIG Material Utilities */
+
+.glass-header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  background: var(--ios-header-blur-bg);
+  backdrop-filter: var(--backdrop-ios-blur);
+  -webkit-backdrop-filter: var(--backdrop-ios-blur);
+  border-bottom: 0.5px solid var(--ios-card-border);
+}
+
+.glass-card {
+  background: var(--ios-card-bg);
+  border: 0.5px solid var(--ios-card-border);
+  border-radius: var(--radius-ios-card);
+  box-shadow: var(--shadow-ios-subtle);
+  transition: transform 0.2s var(--ease-ios-smooth), box-shadow 0.2s ease;
+}
+
+.glass-sheet {
+  background: var(--ios-card-bg);
+  backdrop-filter: var(--backdrop-ios-blur);
+  -webkit-backdrop-filter: var(--backdrop-ios-blur);
+  border-top-left-radius: var(--radius-ios-sheet);
+  border-top-right-radius: var(--radius-ios-sheet);
+  box-shadow: var(--shadow-ios-sheet);
+}
+
+.glass-tab-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  background: var(--ios-header-blur-bg);
+  backdrop-filter: var(--backdrop-ios-blur);
+  -webkit-backdrop-filter: var(--backdrop-ios-blur);
+  border-top: 0.5px solid var(--ios-card-border);
+  padding-bottom: max(12px, env(safe-area-inset-bottom));
+}
+
+/* Recency Ring Styling */
+.recency-ring {
+  box-shadow: 0 0 0 2.5px var(--ring-color);
+  border-radius: 50%;
+  transition: box-shadow 0.3s ease;
+}
+
+.recency-ring.green {
+  --ring-color: var(--ios-green);
+}
+
+.recency-ring.amber {
+  --ring-color: var(--ios-amber);
+}
+
+.recency-ring.red {
+  --ring-color: var(--ios-red);
+}
+
+/* iOS Segmented Control Selector */
+.segmented-control {
+  display: flex;
+  background: var(--ios-card-secondary);
+  border-radius: var(--radius-ios-button);
+  padding: 2px;
+  position: relative;
+}
+
+.segmented-option {
+  flex: 1;
+  text-align: center;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ios-label-secondary);
+  border-radius: calc(var(--radius-ios-button) - 2px);
+  cursor: pointer;
+  transition: color 0.15s ease, background 0.15s ease;
+  z-index: 1;
+}
+
+.segmented-option.active {
+  color: var(--ios-label-primary);
+  background: var(--ios-card-bg);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  font-weight: 600;
+}

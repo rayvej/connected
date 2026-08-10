@@ -148,6 +148,16 @@ googleProvider.setCustomParameters({ prompt: 'select_account' });
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   }
 
+  function escapeHTML(str) {
+    if (!str) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
   function snoozeContact(contactId, days) {
     const c = state.contacts.find(x => x.id === contactId);
     if (!c) return;

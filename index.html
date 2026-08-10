@@ -312,6 +312,26 @@
           </div>
         </div>
 
+        <!-- WEB PUSH NOTIFICATIONS CARD -->
+        <div class="glass-card p-4 space-y-2.5 border border-[var(--border-strong)]">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2 text-[15px] font-bold text-[var(--gold)]" style="font-family: var(--font-header)">
+              <i class="fa-solid fa-bell"></i>
+              <h3>Web Push Notifications</h3>
+            </div>
+            <span id="notification-status-badge" class="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/30">Disabled</span>
+          </div>
+
+          <p class="text-[12.5px] text-[var(--text-secondary)] leading-relaxed">
+            Receive daily reminders for overdue touchpoints directly on your device.
+          </p>
+
+          <button id="btn-enable-notifications" class="w-full py-2.5 rounded-xl gold-glow-btn text-[12.5px] font-bold flex items-center justify-center gap-2 touch-active">
+            <i class="fa-solid fa-bell"></i>
+            <span>Enable Reminders</span>
+          </button>
+        </div>
+
         <div class="glass-card p-4 space-y-2.5">
           <div class="flex items-center gap-2 text-[15px] font-bold text-[var(--gold)]" style="font-family: var(--font-header)">
             <i class="fa-solid fa-database"></i>
@@ -450,14 +470,6 @@
 
         <div class="grid grid-cols-2 gap-2">
           <div>
-            <label class="text-[11px] font-mono uppercase tracking-wider text-[var(--text-tertiary)] block mb-1">Location Tag</label>
-            <div class="relative">
-              <i class="fa-solid fa-location-dot absolute left-3 top-1/2 -translate-y-1/2 text-[10px] text-[var(--text-tertiary)]"></i>
-              <input type="text" id="quicklog-location-input" placeholder="e.g. SF Cafe" class="w-full pl-7 pr-2 py-2 rounded-xl text-[12.5px] outline-none" style="background: var(--bg-input); border: 1px solid var(--border); color: var(--text-primary)">
-            </div>
-          </div>
-
-          <div>
             <label class="text-[11px] font-mono uppercase tracking-wider text-[var(--text-tertiary)] block mb-1">Attach Photo</label>
             <label class="w-full py-2 px-2.5 rounded-xl border text-[12px] font-semibold text-[var(--text-secondary)] flex items-center justify-center gap-1.5 touch-active cursor-pointer truncate" style="background: var(--bg-input); border-color: var(--border)">
               <i class="fa-solid fa-image text-xs text-[var(--gold)]"></i>
@@ -465,11 +477,29 @@
               <input type="file" id="quicklog-photo-input" accept="image/*" class="hidden">
             </label>
           </div>
+
+          <div>
+            <label class="text-[11px] font-mono uppercase tracking-wider text-[var(--text-tertiary)] block mb-1">Record Voice Note</label>
+            <button type="button" id="btn-record-audio-note" class="w-full py-2 px-2.5 rounded-xl border text-[12px] font-semibold text-[var(--text-secondary)] flex items-center justify-center gap-1.5 touch-active truncate" style="background: var(--bg-input); border-color: var(--border)">
+              <i class="fa-solid fa-microphone text-xs text-rose-400" id="audio-rec-icon"></i>
+              <span id="audio-rec-label">Record Audio</span>
+            </button>
+          </div>
         </div>
 
         <div id="quicklog-photo-preview-container" class="hidden relative rounded-xl overflow-hidden border" style="border-color: var(--border-strong)">
           <img id="quicklog-photo-img" class="w-full h-28 object-cover" alt="Photo Preview">
           <button type="button" id="btn-remove-photo" class="absolute top-2 right-2 w-6 h-6 rounded-full bg-black/70 text-white flex items-center justify-center text-xs">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <div id="quicklog-audio-preview-container" class="hidden p-2.5 rounded-xl border flex items-center justify-between gap-2" style="background: var(--bg-elevated); border-color: var(--border-strong)">
+          <div class="flex items-center gap-2 flex-1 min-w-0">
+            <i class="fa-solid fa-waveform text-[var(--gold)] text-sm shrink-0"></i>
+            <audio id="quicklog-audio-player" controls class="w-full h-8 text-xs"></audio>
+          </div>
+          <button type="button" id="btn-remove-audio" class="w-6 h-6 rounded-full bg-black/50 text-white flex items-center justify-center text-xs shrink-0">
             <i class="fa-solid fa-xmark"></i>
           </button>
         </div>
@@ -619,6 +649,17 @@
           <div id="dossier-timeline-container" class="space-y-2">
             <!-- Injected dynamically -->
           </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2 pt-1">
+          <button id="btn-dossier-pdf-export" class="py-2.5 px-3 rounded-xl border text-[var(--gold)] text-[12px] font-bold flex items-center justify-center gap-1.5 touch-active" style="background: var(--bg-elevated); border-color: var(--border-strong)">
+            <i class="fa-solid fa-file-pdf text-[11px]"></i>
+            <span>Export PDF Dossier</span>
+          </button>
+          <button id="btn-dossier-ics-export" class="py-2.5 px-3 rounded-xl border text-[var(--text-primary)] text-[12px] font-bold flex items-center justify-center gap-1.5 touch-active" style="background: var(--bg-input); border-color: var(--border)">
+            <i class="fa-solid fa-calendar-plus text-[11px] text-[var(--gold)]"></i>
+            <span>Add to Calendar</span>
+          </button>
         </div>
 
         <div class="pt-2 flex gap-2">

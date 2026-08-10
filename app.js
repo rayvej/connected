@@ -57,6 +57,10 @@ googleProvider.setCustomParameters({ prompt: 'select_account' });
     selectedFormFreq: 'Monthly',
     isFormVipPinned: false,
     quickLogPhotoDataUrl: null,
+    quickLogAudioDataUrl: null,
+    mediaRecorderInstance: null,
+    audioChunks: [],
+    isRecordingAudio: false,
     isDarkMode: true,
     // Google Authenticated User Profile
     currentUser: null,
@@ -464,6 +468,9 @@ googleProvider.setCustomParameters({ prompt: 'select_account' });
       <button class="cat-pill px-3 py-1 rounded-full text-[11.5px] font-semibold whitespace-nowrap touch-active transition-all ${state.selectedCategory === 'All' ? 'bg-[var(--gold)] text-[#181412] font-bold' : 'bg-[var(--bg-elevated)] text-[var(--text-secondary)] border border-[var(--border)]'}" data-cat="All">
         All
       </button>
+      <button class="cat-pill px-3 py-1 rounded-full text-[11.5px] font-semibold whitespace-nowrap touch-active transition-all ${state.selectedCategory === 'Gentle Reconnects' ? 'bg-amber-400 text-[#181412] font-bold' : 'bg-[var(--bg-elevated)] text-[var(--text-secondary)] border border-[var(--border)]'}" data-cat="Gentle Reconnects">
+        💛 Gentle Reconnects
+      </button>
     `;
 
     state.categories.forEach(cat => {
@@ -496,7 +503,13 @@ googleProvider.setCustomParameters({ prompt: 'select_account' });
         (c.category && c.category.toLowerCase().includes(state.searchQuery.toLowerCase())) ||
         (c.notes && c.notes.toLowerCase().includes(state.searchQuery.toLowerCase()));
 
-      const matchesCat = state.selectedCategory === 'All' || c.category === state.selectedCategory;
+      let matchesCat = true;
+      if (state.selectedCategory === 'Gentle Reconnects') {
+        const daysAgo = c.lastContactedAt ? (Date.now() - new Date(c.lastContactedAt).getTime()) / (1000 * 60 * 60 * 24) : 999;
+        matchesCat = daysAgo >= 30;
+      } else if (state.selectedCategory !== 'All') {
+        matchesCat = c.category === state.selectedCategory;
+      }
       return matchesSearch && matchesCat;
     });
 
@@ -690,6 +703,13 @@ googleProvider.setCustomParameters({ prompt: 'select_account' });
             </div>
           ` : ''}
 
+          ${log.audioDataUrl ? `
+            <div class="mt-2.5 p-2 rounded-xl bg-white/5 border border-white/10 flex items-center gap-2">
+              <i class="fa-solid fa-waveform text-[var(--gold)] text-sm shrink-0"></i>
+              <audio controls src="${log.audioDataUrl}" class="w-full h-8 text-xs"></audio>
+            </div>
+          ` : ''}
+
           ${log.location ? `
             <div class="text-[11px] font-mono text-[var(--gold)] mt-1.5">
               <i class="fa-solid fa-location-dot text-[10px]"></i> ${log.location}
@@ -750,6 +770,7 @@ googleProvider.setCustomParameters({ prompt: 'select_account' });
             </div>
             <p class="text-[12.5px] text-[var(--text-primary)] leading-relaxed">${l.summary}</p>
             ${l.photoDataUrl ? `<img src="${l.photoDataUrl}" class="w-full h-32 object-cover rounded-lg mt-1 border border-white/10" alt="Memory Photo">` : ''}
+            ${l.audioDataUrl ? `<div class="mt-1.5 p-1.5 rounded-lg bg-black/30 border border-white/10 flex items-center gap-2"><i class="fa-solid fa-waveform text-[var(--gold)] text-xs"></i><audio controls src="${l.audioDataUrl}" class="w-full h-7 text-xs"></audio></div>` : ''}
           </div>
         `;
       });
@@ -917,6 +938,7 @@ googleProvider.setCustomParameters({ prompt: 'select_account' });
       summary: noteInput || `Checked in via ${state.selectedMedium}`,
       location: locInput,
       photoDataUrl: state.quickLogPhotoDataUrl,
+      audioDataUrl: state.quickLogAudioDataUrl,
       occurredAt: nowIso,
     };
 
@@ -1412,6 +1434,190 @@ googleProvider.setCustomParameters({ prompt: 'select_account' });
       });
     }
 
+    // ── VOICE AUDIO NOTE RECORDER ──
+    async function toggleAudioRecording() {
+      const recBtn = document.getElementById('btn-record-audio-note');
+      const recLabel = document.getElementById('audio-rec-label');
+      const recIcon = document.getElementById('audio-rec-icon');
+
+      if (!state.isRecordingAudio) {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          state.audioChunks = [];
+          state.mediaRecorderInstance = new MediaRecorder(stream);
+
+          state.mediaRecorderInstance.ondataavailable = e => {
+            if (e.data.size > 0) state.audioChunks.push(e.data);
+          };
+
+          state.mediaRecorderInstance.onstop = () => {
+            const blob = new Blob(state.audioChunks, { type: 'audio/webm' });
+            const reader = new FileReader();
+            reader.onload = evt => {
+              state.quickLogAudioDataUrl = evt.target.result;
+              const player = document.getElementById('quicklog-audio-player');
+              const preview = document.getElementById('quicklog-audio-preview-container');
+              if (player) player.src = evt.target.result;
+              if (preview) preview.classList.remove('hidden');
+            };
+            reader.readAsDataURL(blob);
+            stream.getTracks().forEach(t => t.stop());
+          };
+
+          state.mediaRecorderInstance.start();
+          state.isRecordingAudio = true;
+          if (recLabel) recLabel.textContent = 'Recording...';
+          if (recIcon) recIcon.className = 'fa-solid fa-square text-xs text-rose-500 animate-pulse';
+        } catch (err) {
+          alert('Microphone permission required for audio recording.');
+        }
+      } else {
+        if (state.mediaRecorderInstance && state.mediaRecorderInstance.state !== 'inactive') {
+          state.mediaRecorderInstance.stop();
+        }
+        state.isRecordingAudio = false;
+        if (recLabel) recLabel.textContent = 'Record Audio';
+        if (recIcon) recIcon.className = 'fa-solid fa-microphone text-xs text-rose-400';
+      }
+    }
+
+    function removeAudioAttachment() {
+      state.quickLogAudioDataUrl = null;
+      const preview = document.getElementById('quicklog-audio-preview-container');
+      const player = document.getElementById('quicklog-audio-player');
+      if (preview) preview.classList.add('hidden');
+      if (player) player.src = '';
+    }
+
+    // ── CALENDAR .ICS & PDF EXPORTERS ──
+    function generateIcsFile(contactId) {
+      const c = state.contacts.find(x => x.id === contactId);
+      if (!c) return;
+
+      const title = `Connected Reminder: Touchpoint with ${c.name}`;
+      const desc = `Target Frequency: ${c.targetFrequency}. Notes: ${c.notes || 'None'}`;
+      const startDate = new Date(Date.now() + 1 * 24 * 60 * 60 * 1000).toISOString().replace(/-|:|\.\d\d\d/g, '').slice(0, 15) + 'Z';
+      const endDate = new Date(Date.now() + 1 * 24 * 60 * 60 * 1000 + 30 * 60 * 1000).toISOString().replace(/-|:|\.\d\d\d/g, '').slice(0, 15) + 'Z';
+
+      const csData = [
+        'BEGIN:VCALENDAR',
+        'VERSION:2.0',
+        'PRODID:-//Connected PWA//NONSGML v1.0//EN',
+        'BEGIN:VEVENT',
+        `SUMMARY:${title}`,
+        `DESCRIPTION:${desc}`,
+        `DTSTART:${startDate}`,
+        `DTEND:${endDate}`,
+        'END:VEVENT',
+        'END:VCALENDAR'
+      ].join('\r\n');
+
+      const blob = new Blob([csData], { type: 'text/calendar;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `connected_${c.name.replace(/\s+/g, '_')}_reminder.ics`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function exportPersonDossierPDF(contactId) {
+      const c = state.contacts.find(x => x.id === contactId);
+      if (!c) return;
+
+      const personLogs = state.logs.filter(l => l.contactId === contactId);
+      let logsHtml = '';
+      personLogs.forEach(l => {
+        logsHtml += `
+          <div style="margin-bottom:14px; padding:12px; border:1px solid #ddd; border-radius:8px; background:#fafafa;">
+            <div style="font-weight:bold; font-size:13px; color:#B87A28;">${formatDateShort(l.occurredAt)} • Via ${l.medium}</div>
+            <p style="margin-top:4px; font-size:13px; line-height:1.5;">${l.summary}</p>
+          </div>
+        `;
+      });
+
+      const printWin = window.open('', '_blank');
+      printWin.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Connected Memory Dossier — ${c.name}</title>
+          <style>
+            body { font-family: 'Georgia', serif; padding: 32px; color: #181412; max-width: 700px; margin: 0 auto; }
+            h1 { font-family: system-ui, sans-serif; color: #B87A28; margin-bottom: 4px; }
+            .badge { display: inline-block; background: #eee; padding: 3px 10px; border-radius: 6px; font-size: 12px; font-weight: bold; }
+            .section { margin-top: 24px; border-top: 2px solid #B87A28; padding-top: 16px; }
+          </style>
+        </head>
+        <body>
+          <h1>${c.name}</h1>
+          <div class="badge">${c.category || 'General'}</div> • <span class="badge">Target Frequency: ${c.targetFrequency}</span>
+          
+          <div style="margin-top: 16px; font-size: 14px; line-height: 1.6;">
+            <strong>Memory Notes & Facts:</strong><br>
+            ${c.notes || 'No memory notes recorded.'}
+          </div>
+
+          <div class="section">
+            <h2 style="font-family: system-ui, sans-serif; font-size: 18px; margin-bottom: 12px;">Complete Touchpoint Timeline (${personLogs.length})</h2>
+            ${logsHtml || '<p style="color: #666; italic;">No touchpoint logs recorded.</p>'}
+          </div>
+
+          <script>
+            window.onload = function() { window.print(); };
+          </script>
+        </body>
+        </html>
+      `);
+      printWin.document.close();
+    }
+
+    // ── WEB PUSH NOTIFICATIONS ──
+    function initNotifications() {
+      const btn = document.getElementById('btn-enable-notifications');
+      const badge = document.getElementById('notification-status-badge');
+      if (!btn || !badge) return;
+
+      if (!('Notification' in window)) {
+        badge.textContent = 'Unsupported';
+        btn.disabled = true;
+        return;
+      }
+
+      if (Notification.permission === 'granted') {
+        badge.textContent = 'Enabled';
+        badge.className = 'text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30';
+        btn.innerHTML = '<i class="fa-solid fa-check"></i> <span>Reminders Enabled</span>';
+      } else {
+        badge.textContent = 'Disabled';
+      }
+    }
+
+    async function requestNotificationPermission() {
+      if (!('Notification' in window)) return;
+      const perm = await Notification.requestPermission();
+      initNotifications();
+      if (perm === 'granted') {
+        new Notification('Connected Reminders Enabled', {
+          body: 'You will receive reminders for overdue touchpoints!',
+          icon: 'app-logo.jpg'
+        });
+      }
+    }
+
+    document.getElementById('btn-record-audio-note')?.addEventListener('click', toggleAudioRecording);
+    document.getElementById('btn-remove-audio')?.addEventListener('click', removeAudioAttachment);
+
+    document.getElementById('btn-dossier-pdf-export')?.addEventListener('click', () => {
+      if (state.dossierContactId) exportPersonDossierPDF(state.dossierContactId);
+    });
+
+    document.getElementById('btn-dossier-ics-export')?.addEventListener('click', () => {
+      if (state.dossierContactId) generateIcsFile(state.dossierContactId);
+    });
+
+    document.getElementById('btn-enable-notifications')?.addEventListener('click', requestNotificationPermission);
+
     function clearAllData() {
       if (confirm('Are you sure you want to delete all contacts and memory logs? This action cannot be undone.')) {
         state.contacts = [];
@@ -1443,6 +1649,7 @@ googleProvider.setCustomParameters({ prompt: 'select_account' });
     initVoiceDictation();
     bindEvents();
     initFirebaseAuth();
+    initNotifications();
     renderAll();
   });
 

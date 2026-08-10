@@ -597,9 +597,9 @@ googleProvider.setCustomParameters({ prompt: 'select_account' });
 
   function renderInsightsTab() {
     const matrixContainer = document.getElementById('insights-matrix-container');
-    const birthdayContainer = document.getElementById('insights-birthdays-container');
     if (!matrixContainer) return;
 
+    // 1. Group Balance Matrix
     const catCounts = {};
     state.categories.forEach(cat => catCounts[cat.name] = 0);
     state.contacts.forEach(c => {
@@ -626,24 +626,181 @@ googleProvider.setCustomParameters({ prompt: 'select_account' });
     });
     matrixContainer.innerHTML = matrixHtml;
 
-    if (birthdayContainer) {
-      const withBirthdays = state.contacts.filter(c => c.birthday);
-      if (withBirthdays.length === 0) {
-        birthdayContainer.innerHTML = `<span class="text-[12px] text-[var(--text-tertiary)] italic">No birthdays saved. Edit a person to add their birthday!</span>`;
+    // 2. Champions Leaderboard
+    const championsContainer = document.getElementById('insights-champions-container');
+    if (championsContainer) {
+      const contactLogCounts = state.contacts.map(c => {
+        const count = state.logs.filter(l => l.contactId === c.id).length;
+        return { ...c, logCount: count };
+      }).sort((a, b) => b.logCount - a.logCount).slice(0, 3);
+
+      if (contactLogCounts.length === 0 || contactLogCounts[0].logCount === 0) {
+        championsContainer.innerHTML = `<span class="text-[12px] text-[var(--text-tertiary)] italic">Log check-ins to see your top touchpoint champions!</span>`;
       } else {
-        let bdayHtml = '';
-        withBirthdays.forEach(c => {
-          bdayHtml += `
-            <div class="flex items-center justify-between p-2.5 rounded-xl border text-[12.5px]" style="background: var(--bg-elevated); border-color: var(--border)">
-              <div class="flex items-center gap-2">
-                <span class="text-base">🎂</span>
-                <span class="font-semibold text-[var(--text-primary)]">${c.name}</span>
+        const badges = ['🏆 #1', '🥈 #2', '🥉 #3'];
+        let champHtml = '';
+        contactLogCounts.forEach((c, idx) => {
+          if (c.logCount > 0) {
+            champHtml += `
+              <div class="flex items-center justify-between p-3 rounded-xl border" style="background: var(--bg-elevated); border-color: var(--border)">
+                <div class="flex items-center gap-3">
+                  <span class="font-mono font-bold text-sm text-[var(--gold)]">${badges[idx]}</span>
+                  <div>
+                    <h4 class="font-bold text-[14px] text-[var(--text-primary)]">${c.name}</h4>
+                    <span class="text-[11px] font-mono text-[var(--text-secondary)]">${c.category || 'General'}</span>
+                  </div>
+                </div>
+                <span class="px-2.5 py-1 rounded-full text-[11px] font-mono font-bold bg-[rgba(var(--gold-rgb),0.15)] text-[var(--gold)] border border-[var(--border-strong)]">
+                  ${c.logCount} touchpoint${c.logCount === 1 ? '' : 's'}
+                </span>
               </div>
-              <span class="font-mono text-[11px] text-[var(--gold)]">${c.birthday}</span>
+            `;
+          }
+        });
+        championsContainer.innerHTML = champHtml || `<span class="text-[12px] text-[var(--text-tertiary)] italic">Log check-ins to see champions!</span>`;
+      }
+    }
+
+    // 3. Initiator Balance Ratio
+    const initiatorContainer = document.getElementById('insights-initiator-ratio-container');
+    if (initiatorContainer) {
+      const totalLogs = state.logs.length || 1;
+      const outgoingCount = state.logs.filter(l => l.initiator === 'outgoing').length;
+      const incomingCount = state.logs.filter(l => l.initiator === 'incoming').length;
+      const outPct = Math.round((outgoingCount / totalLogs) * 100) || 50;
+      const inPct = 100 - outPct;
+
+      initiatorContainer.innerHTML = `
+        <div class="flex justify-between text-[12px] font-mono font-bold mb-1">
+          <span style="color: #34C759"><i class="fa-solid fa-paper-plane text-xs"></i> I Reached Out (${outPct}%)</span>
+          <span style="color: #007AFF"><i class="fa-solid fa-inbox text-xs"></i> They Reached Out (${inPct}%)</span>
+        </div>
+        <div class="w-full h-3 rounded-full overflow-hidden flex bg-[var(--bg-input)]">
+          <div class="h-full bg-emerald-500 transition-all duration-500" style="width: ${outPct}%"></div>
+          <div class="h-full bg-blue-500 transition-all duration-500" style="width: ${inPct}%"></div>
+        </div>
+      `;
+    }
+
+    // 4. Monthly Touchpoint Trend Graph (Last 6 Months)
+    const trendContainer = document.getElementById('insights-monthly-trend-container');
+    if (trendContainer) {
+      const now = new Date();
+      const monthData = [];
+      for (let i = 5; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const mLabel = d.toLocaleDateString('en-US', { month: 'short' });
+        const count = state.logs.filter(l => {
+          const lDate = new Date(l.occurredAt);
+          return lDate.getMonth() === d.getMonth() && lDate.getFullYear() === d.getFullYear();
+        }).length;
+        monthData.push({ label: mLabel, count });
+      }
+
+      const maxCount = Math.max(...monthData.map(m => m.count), 1);
+      let trendHtml = `<div class="flex items-end justify-between h-32 pt-4 px-2 gap-2">`;
+      monthData.forEach(m => {
+        const heightPct = Math.max(Math.round((m.count / maxCount) * 100), 12);
+        trendHtml += `
+          <div class="flex flex-col items-center gap-1 flex-1">
+            <span class="text-[10px] font-mono text-[var(--gold)] font-bold">${m.count}</span>
+            <div class="w-full rounded-t-lg transition-all duration-500" style="height: ${heightPct}%; background: linear-gradient(180deg, var(--gold), rgba(var(--gold-rgb),0.3))"></div>
+            <span class="text-[10.5px] font-mono text-[var(--text-secondary)]">${m.label}</span>
+          </div>
+        `;
+      });
+      trendHtml += `</div>`;
+      trendContainer.innerHTML = trendHtml;
+    }
+
+    // 5. Preferred Channel Breakdown
+    const channelContainer = document.getElementById('insights-channel-breakdown-container');
+    if (channelContainer) {
+      const totalLogs = state.logs.length || 1;
+      const mediums = ['iMessage', 'Call', 'WhatsApp', 'FaceTime', 'WeChat', 'In-Person', 'Other'];
+      let channelHtml = '';
+
+      mediums.forEach(m => {
+        const count = state.logs.filter(l => l.medium === m).length;
+        if (count > 0 || state.logs.length === 0) {
+          const pct = Math.round((count / totalLogs) * 100);
+          const icon = MEDIUM_CONFIG[m]?.icon || 'fa-comment';
+          channelHtml += `
+            <div class="space-y-1">
+              <div class="flex justify-between text-[12px] font-semibold">
+                <span class="flex items-center gap-1.5"><i class="fa-solid ${icon} text-[11px] text-[var(--gold)]"></i> ${m}</span>
+                <span class="font-mono text-[var(--gold)]">${pct}% (${count})</span>
+              </div>
+              <div class="w-full h-2 rounded-full overflow-hidden bg-[var(--bg-input)]">
+                <div class="h-full rounded-full transition-all duration-500" style="width: ${pct}%; background: var(--gold)"></div>
+              </div>
             </div>
           `;
-        });
-        birthdayContainer.innerHTML = bdayHtml;
+        }
+      });
+      channelContainer.innerHTML = channelHtml || `<span class="text-[12px] text-[var(--text-tertiary)] italic">Log check-ins to see channel distribution!</span>`;
+    }
+
+    // 6. 52-Week Touchpoint Activity Heatmap
+    const heatmapContainer = document.getElementById('insights-heatmap-container');
+    if (heatmapContainer) {
+      const dayCounts = {};
+      state.logs.forEach(l => {
+        const key = new Date(l.occurredAt).toISOString().slice(0, 10);
+        dayCounts[key] = (dayCounts[key] || 0) + 1;
+      });
+
+      let gridHtml = `<div class="flex gap-1 overflow-x-auto pb-2 no-scrollbar" style="max-width: 100%;">`;
+      const now = new Date();
+      for (let w = 51; w >= 0; w--) {
+        gridHtml += `<div class="flex flex-col gap-1">`;
+        for (let d = 0; d < 7; d++) {
+          const dayDate = new Date(now.getTime() - ((w * 7) + (6 - d)) * 24 * 60 * 60 * 1000);
+          const key = dayDate.toISOString().slice(0, 10);
+          const count = dayCounts[key] || 0;
+          let opacity = '0.15';
+          if (count === 1) opacity = '0.45';
+          else if (count === 2) opacity = '0.75';
+          else if (count >= 3) opacity = '1.0';
+
+          gridHtml += `<div class="w-3 h-3 rounded-sm transition-all" style="background: var(--gold); opacity: ${opacity}" title="${key}: ${count} touchpoints"></div>`;
+        }
+        gridHtml += `</div>`;
+      }
+      gridHtml += `</div>`;
+      heatmapContainer.innerHTML = gridHtml;
+    }
+
+    // 7. Connection Day Habits
+    const habitsContainer = document.getElementById('insights-habits-container');
+    if (habitsContainer) {
+      const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+      const dayCounts = [0, 0, 0, 0, 0, 0, 0];
+      state.logs.forEach(l => {
+        const dayIdx = new Date(l.occurredAt).getDay();
+        dayCounts[dayIdx]++;
+      });
+
+      const maxIdx = dayCounts.indexOf(Math.max(...dayCounts));
+      const peakDay = days[maxIdx];
+      const peakCount = dayCounts[maxIdx];
+      const totalLogs = state.logs.length || 1;
+      const peakPct = Math.round((peakCount / totalLogs) * 100);
+
+      if (state.logs.length === 0) {
+        habitsContainer.innerHTML = `<span class="text-[12px] text-[var(--text-tertiary)] italic">Log check-ins to unlock your connection habit insights!</span>`;
+      } else {
+        habitsContainer.innerHTML = `
+          <div class="flex items-center gap-3 p-3 rounded-xl border" style="background: var(--bg-elevated); border-color: var(--border)">
+            <div class="w-10 h-10 rounded-full flex items-center justify-center text-lg shrink-0" style="background: rgba(var(--gold-rgb),0.15); color: var(--gold)">
+              🗓️
+            </div>
+            <div>
+              <h4 class="font-bold text-[13.5px] text-[var(--text-primary)]">${peakDay} is your #1 Connection Day!</h4>
+              <p class="text-[12px] text-[var(--text-secondary)] mt-0.5">${peakPct}% of all your touchpoints happen on ${peakDay}s (${peakCount} logged).</p>
+            </div>
+          </div>
+        `;
       }
     }
   }

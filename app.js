@@ -78,7 +78,7 @@
       notes: 'Traveling in Tokyo until end of month.',
       isPinned: false,
       birthday: '1994-09-02',
-      snoozedUntil: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // Snoozed 1 week
+      snoozedUntil: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
       createdAt: new Date().toISOString(),
     }
   ];
@@ -222,7 +222,6 @@
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   }
 
-  // FEATURE #6: Snooze Helper
   function snoozeContact(contactId, days) {
     const c = state.contacts.find(x => x.id === contactId);
     if (!c) return;
@@ -260,6 +259,18 @@
     }
 
     if (pinScreen) pinScreen.classList.add('hidden');
+    checkDefaultPinWarning();
+  }
+
+  function checkDefaultPinWarning() {
+    const banner = document.getElementById('default-pin-warning-banner');
+    if (!banner) return;
+
+    if (state.userPin === DEFAULT_PIN) {
+      banner.classList.remove('hidden');
+    } else {
+      banner.classList.add('hidden');
+    }
   }
 
   function handleGoogleSignIn() {
@@ -314,6 +325,47 @@
   function lockAppNow() {
     state.isPinUnlocked = false;
     checkSecurityState();
+  }
+
+  function handleChangePinSubmit(e) {
+    e.preventDefault();
+    const currentPin = document.getElementById('input-current-pin').value.trim();
+    const newPin = document.getElementById('input-new-pin').value.trim();
+    const confirmPin = document.getElementById('input-confirm-pin').value.trim();
+    const msgEl = document.getElementById('change-pin-status-msg');
+
+    if (!msgEl) return;
+
+    if (currentPin !== state.userPin) {
+      msgEl.textContent = '❌ Current PIN is incorrect';
+      msgEl.className = 'text-[11.5px] font-mono text-center font-semibold text-rose-400 block';
+      return;
+    }
+
+    if (newPin.length !== 4 || !/^\d{4}$/.test(newPin)) {
+      msgEl.textContent = '❌ New PIN must be exactly 4 numeric digits';
+      msgEl.className = 'text-[11.5px] font-mono text-center font-semibold text-rose-400 block';
+      return;
+    }
+
+    if (newPin !== confirmPin) {
+      msgEl.textContent = '❌ New PINs do not match';
+      msgEl.className = 'text-[11.5px] font-mono text-center font-semibold text-rose-400 block';
+      return;
+    }
+
+    // Save new PIN
+    state.userPin = newPin;
+    localStorage.setItem(STORAGE_KEY_PIN, newPin);
+
+    msgEl.textContent = '✓ Security PIN updated successfully!';
+    msgEl.className = 'text-[11.5px] font-mono text-center font-semibold text-emerald-400 block';
+
+    document.getElementById('input-current-pin').value = '';
+    document.getElementById('input-new-pin').value = '';
+    document.getElementById('input-confirm-pin').value = '';
+
+    checkDefaultPinWarning();
   }
 
   // ── THEME CONTROLLER ──
@@ -419,6 +471,7 @@
     renderInsightsTab();
     renderMemoriesList();
     renderWidgetPreview();
+    checkDefaultPinWarning();
     updateShortcutUrlDisplay();
   }
 
@@ -673,7 +726,6 @@
     container.innerHTML = html;
   }
 
-  // FEATURE #10: iPhone Home Screen Widget Simulation Preview Renderer
   function renderWidgetPreview() {
     const container = document.getElementById('widget-contacts-preview');
     if (!container) return;
@@ -915,7 +967,7 @@
     contact.lastContactedAt = nowIso;
     contact.lastMedium = state.selectedMedium;
     contact.lastInitiator = state.selectedInitiator;
-    contact.snoozedUntil = null; // Clear snooze on new check-in
+    contact.snoozedUntil = null;
     saveContacts();
     sortContactsByRecency();
 
@@ -932,7 +984,6 @@
     }
   }
 
-  // FEATURE #8: Photo Attachment File Reader Handler
   function handlePhotoUpload(e) {
     const file = e.target.files[0];
     if (!file) return;
@@ -1136,7 +1187,7 @@
   // ── JSON EXPORT & IMPORT ──
   function exportJSONData() {
     const exportObj = {
-      version: '2.5',
+      version: '2.6',
       exportDate: new Date().toISOString(),
       categories: state.categories,
       contacts: state.contacts,
@@ -1251,6 +1302,14 @@
 
     document.getElementById('pin-backspace')?.addEventListener('click', handlePinBackspace);
     document.getElementById('btn-lock-app-now')?.addEventListener('click', lockAppNow);
+    document.getElementById('form-change-pin')?.addEventListener('submit', handleChangePinSubmit);
+
+    // Default PIN Warning Banner click -> Navigate to Settings tab
+    document.getElementById('default-pin-warning-banner')?.addEventListener('click', () => {
+      switchTab('settings');
+      const card = document.getElementById('card-change-pin');
+      if (card) card.scrollIntoView({ behavior: 'smooth' });
+    });
 
     const themeBtn = document.getElementById('btn-theme-toggle');
     if (themeBtn) themeBtn.addEventListener('click', toggleTheme);
@@ -1284,11 +1343,9 @@
 
     document.getElementById('btn-start-dictation')?.addEventListener('click', toggleVoiceDictation);
 
-    // FEATURE #8: Photo Attachment Input Bindings
     document.getElementById('quicklog-photo-input')?.addEventListener('change', handlePhotoUpload);
     document.getElementById('btn-remove-photo')?.addEventListener('click', removePhotoAttachment);
 
-    // FEATURE #6: Snooze Actions
     document.getElementById('btn-snooze-3d')?.addEventListener('click', () => {
       if (state.dossierContactId) snoozeContact(state.dossierContactId, 3);
     });

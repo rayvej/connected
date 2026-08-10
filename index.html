@@ -27,7 +27,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
 
   <!-- Custom HIG Design System -->
-  <link rel="stylesheet" href="style.css?v=204">
+  <link rel="stylesheet" href="style.css?v=205">
 </head>
 
 <body class="min-h-screen overflow-hidden relative flex justify-center" style="background-color: #0d0b0a;">
@@ -142,6 +142,16 @@
 
       <!-- VIEW 1: RECENCY TOUCHPOINTS DASHBOARD -->
       <section id="view-recency" class="space-y-3 pb-8">
+
+        <!-- Default PIN Security Warning Banner -->
+        <div id="default-pin-warning-banner" class="glass-card p-3 flex items-center justify-between gap-2 border-amber-500/40 bg-amber-500/10 text-amber-300 hidden touch-active cursor-pointer">
+          <div class="flex items-center gap-2.5 min-w-0">
+            <i class="fa-solid fa-triangle-exclamation text-amber-400 shrink-0"></i>
+            <span class="text-[12px] font-semibold truncate">Security Warning: You are using default PIN 1234. Change PIN now.</span>
+          </div>
+          <span class="text-[11px] font-bold underline shrink-0 text-[var(--gold)]">Settings</span>
+        </div>
+
         <div class="flex items-center justify-between px-1">
           <h2 class="text-[13px] font-bold uppercase tracking-wider" style="font-family: var(--font-header); color: var(--gold)">
             Check-In Recency (<span id="recency-count">0</span>)
@@ -204,14 +214,53 @@
         </div>
       </section>
 
-      <!-- VIEW 4: SETTINGS & IOS WIDGET PREVIEW -->
+      <!-- VIEW 4: SETTINGS & SECURITY (TAB 5 RENAMED TO SETTINGS) -->
       <section id="view-settings" class="space-y-4 pb-8 hidden">
 
-        <!-- FEATURE #10: iPhone Home Screen Widget Simulation Card -->
+        <!-- CHANGE SECURITY PIN CARD -->
+        <div class="glass-card p-4 space-y-3 border border-[var(--border-strong)]" id="card-change-pin">
+          <div class="flex items-center justify-between border-b pb-2" style="border-color: var(--border)">
+            <div class="flex items-center gap-2 text-[15px] font-bold text-[var(--gold)]" style="font-family: var(--font-header)">
+              <i class="fa-solid fa-key"></i>
+              <h3>Change Security PIN</h3>
+            </div>
+            <span class="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/30">Security</span>
+          </div>
+
+          <p class="text-[12.5px] text-[var(--text-secondary)] leading-relaxed">
+            Update your 4-digit security PIN from default <span class="font-mono text-[var(--gold)] font-bold">1234</span>.
+          </p>
+
+          <form id="form-change-pin" class="space-y-2.5">
+            <div>
+              <label class="text-[11px] font-mono uppercase tracking-wider text-[var(--text-tertiary)] block mb-1">Current 4-Digit PIN</label>
+              <input type="password" maxlength="4" pattern="[0-9]*" id="input-current-pin" required placeholder="1234" class="w-full px-3 py-2 rounded-xl text-[13px] font-mono outline-none text-center tracking-widest" style="background: var(--bg-input); border: 1px solid var(--border); color: var(--text-primary)">
+            </div>
+
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="text-[11px] font-mono uppercase tracking-wider text-[var(--text-tertiary)] block mb-1">New 4-Digit PIN</label>
+                <input type="password" maxlength="4" pattern="[0-9]*" id="input-new-pin" required placeholder="e.g. 5678" class="w-full px-3 py-2 rounded-xl text-[13px] font-mono outline-none text-center tracking-widest" style="background: var(--bg-input); border: 1px solid var(--border); color: var(--text-primary)">
+              </div>
+              <div>
+                <label class="text-[11px] font-mono uppercase tracking-wider text-[var(--text-tertiary)] block mb-1">Confirm New PIN</label>
+                <input type="password" maxlength="4" pattern="[0-9]*" id="input-confirm-pin" required placeholder="e.g. 5678" class="w-full px-3 py-2 rounded-xl text-[13px] font-mono outline-none text-center tracking-widest" style="background: var(--bg-input); border: 1px solid var(--border); color: var(--text-primary)">
+              </div>
+            </div>
+
+            <p id="change-pin-status-msg" class="text-[11.5px] font-mono text-center font-semibold hidden"></p>
+
+            <button type="submit" class="w-full py-2.5 rounded-xl gold-glow-btn text-[13px] font-bold touch-active">
+              Save New Security PIN
+            </button>
+          </form>
+        </div>
+
+        <!-- iPhone Home Screen Widget Simulation Card -->
         <div class="ios-widget-frame p-4 space-y-3">
           <div class="flex items-center justify-between border-b pb-2" style="border-color: var(--border)">
             <div class="flex items-center gap-2">
-              <i class="fa-solid fa-[#181412] fa-mobile-screen-button text-[var(--gold)] text-base"></i>
+              <i class="fa-solid fa-mobile-screen-button text-[var(--gold)] text-base"></i>
               <h3 class="text-[15px] font-bold text-[var(--gold)]" style="font-family: var(--font-header)">iPhone Widget Preview</h3>
             </div>
             <span class="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-[rgba(var(--gold-rgb),0.15)] text-[var(--gold)] border border-[var(--border-strong)]">iOS 17 Widget</span>
@@ -221,7 +270,7 @@
 
           <div class="p-3 rounded-2xl bg-black/40 border border-[var(--border-strong)] space-y-2 font-mono text-[11.5px]">
             <div class="flex items-center justify-between text-[var(--gold)] font-bold border-b pb-1.5" style="border-color: var(--border)">
-              <span class="flex items-center gap-1.5"><i class="fa-solid fa-[#181412] fa-heart text-xs text-rose-400"></i> Connected Overdue</span>
+              <span class="flex items-center gap-1.5"><i class="fa-solid fa-heart text-xs text-rose-400"></i> Connected Overdue</span>
               <span class="text-[10px] text-[var(--text-tertiary)]">Live Widget</span>
             </div>
 
@@ -234,7 +283,7 @@
         <div class="glass-card p-4 space-y-2 border border-[var(--border-strong)]">
           <div class="flex items-center justify-between">
             <span class="text-[15px] font-bold text-[var(--gold)]" style="font-family: var(--font-header)">App Updates &amp; Security PIN</span>
-            <span class="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-[rgba(var(--gold-rgb),0.15)] text-[var(--gold)] border border-[var(--border-strong)]">v2.5 • Complete</span>
+            <span class="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-[rgba(var(--gold-rgb),0.15)] text-[var(--gold)] border border-[var(--border-strong)]">v2.6 • Security</span>
           </div>
           <p class="text-[12.5px] text-[var(--text-secondary)] leading-relaxed">
             Manage PIN lock security and PWA cache updates (matching Reading Tracker settings).
@@ -300,7 +349,7 @@
 
     </main>
 
-    <!-- ── SYMMETRICAL 5-SLOT BOTTOM NAVIGATION TAB BAR ── -->
+    <!-- ── SYMMETRICAL 5-SLOT BOTTOM NAVIGATION TAB BAR (SLOT 5 RENAMED TO SETTINGS) ── -->
     <nav class="sticky bottom-0 left-0 right-0 z-30 flex items-center justify-around px-3 py-2 glass-tab-bar shrink-0">
       <button id="tab-btn-recency" class="flex flex-col items-center gap-1 text-[10.5px] font-mono text-[var(--gold)] font-bold touch-active">
         <i class="fa-solid fa-clock-rotate-left text-base"></i>
@@ -321,13 +370,14 @@
         <span>Memories</span>
       </button>
 
+      <!-- Slot 5: Settings (Renamed from iOS Auto) -->
       <button id="tab-btn-settings" class="flex flex-col items-center gap-1 text-[10.5px] font-mono text-[var(--text-tertiary)] touch-active">
-        <i class="fa-solid fa-sliders text-base"></i>
-        <span>iOS Auto</span>
+        <i class="fa-solid fa-gear text-base"></i>
+        <span>Settings</span>
       </button>
     </nav>
 
-    <!-- ── MODAL 1: QUICK LOG SHEET (WITH PHOTO ATTACHMENT) ── -->
+    <!-- ── MODAL 1: QUICK LOG SHEET ── -->
     <div id="modal-quick-log" class="fixed inset-0 z-50 flex items-end justify-center hidden bg-black/60 backdrop-blur-sm transition-opacity">
       <div class="w-full max-w-[448px] glass-sheet p-5 space-y-3.5 animate-slide-up max-h-[90vh] overflow-y-auto no-scrollbar">
         <div class="flex items-center justify-between border-b pb-2" style="border-color: var(--border)">
@@ -340,7 +390,6 @@
           </button>
         </div>
 
-        <!-- Person Search Bar -->
         <div>
           <label class="text-[11px] font-mono uppercase tracking-wider text-[var(--text-tertiary)] block mb-1">Search Person</label>
           <div class="relative">
@@ -349,7 +398,6 @@
           </div>
         </div>
 
-        <!-- Contact Select Bubbles -->
         <div>
           <div class="flex items-center justify-between mb-1">
             <label class="text-[11px] font-mono uppercase tracking-wider text-[var(--text-tertiary)]">Select Person (Top 10 Recent)</label>
@@ -360,7 +408,6 @@
           </div>
         </div>
 
-        <!-- Initiator Toggle -->
         <div>
           <label class="text-[11px] font-mono uppercase tracking-wider text-[var(--text-tertiary)] block mb-1">Initiator Direction</label>
           <div class="grid grid-cols-2 gap-2" id="quicklog-initiator-toggle">
@@ -375,7 +422,6 @@
           </div>
         </div>
 
-        <!-- Medium Select -->
         <div>
           <label class="text-[11px] font-mono uppercase tracking-wider text-[var(--text-tertiary)] block mb-1">Medium</label>
           <div class="grid grid-cols-3 gap-2" id="quicklog-medium-grid">
@@ -383,7 +429,6 @@
           </div>
         </div>
 
-        <!-- Note Input with Voice Dictation Button -->
         <div>
           <div class="flex items-center justify-between mb-1">
             <label class="text-[11px] font-mono uppercase tracking-wider text-[var(--text-tertiary)]">What was discussed / memory note</label>
@@ -395,7 +440,6 @@
           <input type="text" id="quicklog-note-input" placeholder="e.g. Discussed weekend plans, job updates..." class="w-full px-3.5 py-2.5 rounded-xl text-[13.5px] outline-none" style="background: var(--bg-input); border: 1px solid var(--border); color: var(--text-primary)">
         </div>
 
-        <!-- Location & Photo Attachment Row (FEATURE #8) -->
         <div class="grid grid-cols-2 gap-2">
           <div>
             <label class="text-[11px] font-mono uppercase tracking-wider text-[var(--text-tertiary)] block mb-1">Location Tag</label>
@@ -422,7 +466,6 @@
           </button>
         </div>
 
-        <!-- Action Buttons -->
         <div class="grid grid-cols-2 gap-2 pt-1">
           <button id="btn-save-quick-log" class="w-full py-3 rounded-xl gold-glow-btn text-[14px] font-bold flex items-center justify-center gap-2 touch-active">
             <i class="fa-solid fa-paper-plane text-xs"></i>
@@ -453,7 +496,6 @@
         <form id="contact-form" class="space-y-3.5">
           <input type="hidden" id="contact-form-id">
 
-          <!-- Name & VIP Pin Toggle -->
           <div class="flex items-center gap-2">
             <div class="flex-1">
               <label class="text-[11px] font-mono uppercase tracking-wider text-[var(--text-tertiary)] block mb-1">Name *</label>
@@ -464,7 +506,6 @@
             </button>
           </div>
 
-          <!-- Category / Group -->
           <div>
             <div class="flex items-center justify-between mb-1">
               <label class="text-[11px] font-mono uppercase tracking-wider text-[var(--text-tertiary)]">Category / Group</label>
@@ -483,7 +524,6 @@
             </div>
           </div>
 
-          <!-- Phone & Birthday Date -->
           <div class="grid grid-cols-2 gap-2">
             <div>
               <label class="text-[11px] font-mono uppercase tracking-wider text-[var(--text-tertiary)] block mb-1">Phone (Optional)</label>
@@ -495,7 +535,6 @@
             </div>
           </div>
 
-          <!-- Target Check-In Frequency -->
           <div>
             <label class="text-[11px] font-mono uppercase tracking-wider text-[var(--text-tertiary)] block mb-1">Check-In Frequency Target</label>
             <div class="grid grid-cols-3 gap-2" id="frequency-options-grid">
@@ -507,13 +546,11 @@
             </div>
           </div>
 
-          <!-- Memory Notes -->
           <div>
             <label class="text-[11px] font-mono uppercase tracking-wider text-[var(--text-tertiary)] block mb-1">Important Memory Notes &amp; Facts</label>
             <textarea id="contact-input-notes" rows="3" placeholder="e.g. Favorite coffee, kids' names, recent life updates..." class="w-full px-3.5 py-2.5 rounded-xl text-[13px] outline-none leading-relaxed" style="background: var(--bg-input); border: 1px solid var(--border); color: var(--text-primary)"></textarea>
           </div>
 
-          <!-- Submit / Delete -->
           <div class="pt-2 space-y-2">
             <button type="submit" class="w-full py-3.5 rounded-xl gold-glow-btn text-[15px] font-bold touch-active">
               Save Person
@@ -526,7 +563,7 @@
       </div>
     </div>
 
-    <!-- ── MODAL 3: PERSON DOSSIER MODAL (WITH SNOOZE ACTION BUTTONS) ── -->
+    <!-- ── MODAL 3: PERSON DOSSIER MODAL ── -->
     <div id="modal-person-dossier" class="fixed inset-0 z-50 flex items-end justify-center hidden bg-black/60 backdrop-blur-sm transition-opacity">
       <div class="w-full max-w-[448px] glass-sheet p-5 space-y-4 max-h-[90vh] overflow-y-auto no-scrollbar">
         <div class="flex items-center justify-between border-b pb-2" style="border-color: var(--border)">
@@ -550,7 +587,6 @@
           </div>
         </div>
 
-        <!-- FEATURE #6: Smart Reminder Snooze Actions -->
         <div class="p-3 rounded-xl border space-y-2" style="background: var(--bg-elevated); border-color: var(--border)">
           <div class="flex items-center justify-between">
             <span class="text-[11px] font-mono uppercase tracking-wider text-[var(--text-tertiary)] flex items-center gap-1">
@@ -591,6 +627,6 @@
   </div>
 
   <!-- Application Logic -->
-  <script src="app.js?v=204"></script>
+  <script src="app.js?v=205"></script>
 </body>
 </html>

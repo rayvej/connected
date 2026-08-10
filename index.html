@@ -1,25 +1,321 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/jpeg" href="/app-logo.jpg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="Connected" />
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-    <title>Connected — Personal Touchpoints & Memories</title>
+<!DOCTYPE html>
+<html lang="en" data-mode="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="description" content="Connected — Personal touchpoints, recency tracker, and memory log.">
+  <meta name="theme-color" content="#181412">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Connected">
+  <title>Connected — Touchpoints & Memories</title>
 
-    <!-- Font Awesome 6 Free -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous">
+  <!-- PWA Manifest & App Icons -->
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="icon" type="image/jpeg" href="app-logo.jpg">
 
-    <!-- Editorial Google Fonts (Matching Reading Tracker) -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&family=Outfit:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,400&display=swap" rel="stylesheet">
-  </head>
-  <body class="min-h-screen overflow-x-hidden antialiased">
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+  <!-- Font Awesome 6 Free -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous">
+
+  <!-- Editorial Google Fonts (Reading Tracker Typography) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&family=Outfit:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,400&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS CDN for instant utility compatibility -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Custom HIG Design System -->
+  <link rel="stylesheet" href="style.css?v=201">
+</head>
+
+<body class="min-h-screen overflow-hidden relative flex justify-center" style="background-color: #0d0b0a;">
+
+  <div class="frosted-bg-overlay"></div>
+
+  <!-- Ambient background glow blobs (Reading Tracker style) -->
+  <div class="fixed inset-0 pointer-events-none z-[-2] overflow-hidden opacity-60">
+    <div class="absolute -top-24 -left-24 w-[280px] h-[280px] rounded-full bg-orange-500/12 blur-[120px] animate-float-1"></div>
+    <div class="absolute top-[40%] right-12 w-[240px] h-[240px] rounded-full bg-rose-600/10 blur-[120px] animate-float-2"></div>
+    <div class="absolute -bottom-24 left-[5%] w-[260px] h-[260px] rounded-full bg-amber-500/8 blur-[120px] animate-float-1"></div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════
+       OUTER CONTAINER — max-w-md iPhone-width centering
+       ════════════════════════════════════════════════════════════ -->
+  <div id="app-container" class="relative z-10 flex flex-col h-screen h-[100dvh] w-full max-w-[448px] mx-auto border-x shadow-2xl overflow-hidden" style="background: var(--bg-solid); border-color: var(--border-strong);">
+
+    <!-- ── HEADER BLUR BAR ── -->
+    <header class="glass-header px-4 pt-3.5 pb-3 space-y-3 shrink-0 relative z-30">
+      <!-- Title & Controls Row -->
+      <div class="flex items-center justify-between gap-2">
+        <div class="flex items-center gap-2.5 min-w-0">
+          <img src="app-logo.jpg" alt="Logo" class="w-8 h-8 rounded-xl object-cover border" style="border-color: var(--border-strong);">
+          <h1 class="text-[20px] font-bold tracking-tight truncate" style="font-family: var(--font-header); color: var(--gold)">
+            Connected
+          </h1>
+        </div>
+
+        <div class="flex items-center gap-2 shrink-0">
+          <!-- Sun/Moon Theme Toggle -->
+          <button id="btn-theme-toggle" class="w-8 h-8 rounded-full flex items-center justify-center touch-active text-[13px] border" style="background: var(--bg-input); border-color: var(--border-strong); color: var(--text-secondary)" title="Toggle Light/Dark mode">
+            <i className="fa-solid fa-moon" id="theme-icon"></i>
+          </button>
+
+          <!-- Add Person Button -->
+          <button id="btn-open-add-contact" class="px-3 py-1.5 rounded-full font-semibold text-[12px] flex items-center gap-1.5 touch-active" style="background: rgba(var(--gold-rgb), 0.15); color: var(--gold); border: 1px solid var(--border-strong)">
+            <i class="fa-solid fa-plus text-[11px]"></i>
+            <span>Add Person</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Search Bar (Option C) -->
+      <div class="relative">
+        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-[12px] text-[var(--text-tertiary)]"></i>
+        <input type="text" id="search-input" placeholder="Search people, groups, notes..." class="w-full pl-9 pr-3.5 py-2 rounded-xl text-[13.5px] outline-none transition-all" style="background: var(--bg-input); border: 1px solid var(--border); color: var(--text-primary)">
+      </div>
+
+      <!-- Category Filter Pills -->
+      <div class="flex gap-2 overflow-x-auto pb-0.5 no-scrollbar" id="category-pills-container">
+        <!-- Injected dynamically via app.js -->
+      </div>
+    </header>
+
+    <!-- ── SCROLLABLE VIEWS CONTAINER ── -->
+    <main class="flex-1 overflow-y-auto no-scrollbar p-4 relative z-10">
+
+      <!-- VIEW 1: RECENCY TOUCHPOINTS DASHBOARD -->
+      <section id="view-recency" class="space-y-3 pb-8">
+        <div class="flex items-center justify-between px-1">
+          <h2 class="text-[13px] font-bold uppercase tracking-wider" style="font-family: var(--font-header); color: var(--gold)">
+            Check-In Recency (<span id="recency-count">0</span>)
+          </h2>
+          <span class="text-[11px] font-mono text-[var(--text-tertiary)]">
+            Most recent first
+          </span>
+        </div>
+
+        <div id="contacts-list-container" class="space-y-2.5">
+          <!-- Contact cards injected dynamically via app.js -->
+        </div>
+      </section>
+
+      <!-- VIEW 2: MEMORIES HISTORY LOG -->
+      <section id="view-memories" class="space-y-3 pb-8 hidden">
+        <div class="flex items-center justify-between px-1">
+          <h2 class="text-[14px] font-bold uppercase tracking-wider" style="font-family: var(--font-header); color: var(--gold)">
+            Past Check-In Memories
+          </h2>
+          <span class="text-[11px] font-mono text-[var(--text-tertiary)]">Searchable</span>
+        </div>
+
+        <div id="memories-list-container" class="space-y-3">
+          <!-- Memory logs injected dynamically via app.js -->
+        </div>
+      </section>
+
+      <!-- VIEW 3: SETTINGS & IOS AUTO -->
+      <section id="view-settings" class="space-y-4 pb-8 hidden">
+        <div class="glass-card p-4 space-y-2 border border-[var(--border-strong)]">
+          <div class="flex items-center justify-between">
+            <span class="text-[15px] font-bold text-[var(--gold)]" style="font-family: var(--font-header)">App Updates & Cache Control</span>
+            <span class="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-[rgba(var(--gold-rgb),0.15)] text-[var(--gold)] border border-[var(--border-strong)]">v2.0 • HIG</span>
+          </div>
+          <p class="text-[12.5px] text-[var(--text-secondary)] leading-relaxed">
+            Manage PWA cache storage and manual update checks (matching Reading Tracker settings).
+          </p>
+
+          <div class="grid grid-cols-2 gap-2 pt-2">
+            <button id="btn-check-sw-update" class="py-2.5 px-3 rounded-xl border text-[var(--gold)] text-[12px] font-bold flex items-center justify-center gap-1.5 touch-active" style="background: var(--bg-elevated); border-color: var(--border-strong)">
+              <i class="fa-solid fa-rotate text-[11px]"></i>
+              <span>Check Updates</span>
+            </button>
+
+            <button id="btn-force-reload-app" class="py-2.5 px-3 rounded-xl border bg-red-500/10 border-red-500/30 text-red-400 text-[12px] font-bold flex items-center justify-center gap-1.5 touch-active">
+              <i class="fa-solid fa-power-off text-[11px]"></i>
+              <span>Force Refresh</span>
+            </button>
+          </div>
+          <p id="sw-update-status" class="text-[11px] font-mono text-center text-[var(--gold)] hidden pt-1"></p>
+        </div>
+
+        <!-- iOS Shortcuts Deep Link Info -->
+        <div class="glass-card p-4 space-y-2.5">
+          <div class="flex items-center gap-2 text-[15px] font-bold text-[var(--gold)]" style="font-family: var(--font-header)">
+            <i class="fa-solid fa-bolt"></i>
+            <h3>iOS Shortcuts Deep Links</h3>
+          </div>
+          <p class="text-[12.5px] text-[var(--text-secondary)] leading-relaxed">
+            Configure Apple Siri Shortcuts to trigger 1-tap quick logs directly from your iPhone Home Screen.
+          </p>
+          <div class="p-3 rounded-xl text-[11.5px] font-mono break-all flex items-center justify-between" style="background: var(--bg-elevated); border: 1px solid var(--border)">
+            <span id="shortcut-url-example"></span>
+            <button id="btn-copy-shortcut-url" class="px-2 py-1 rounded-lg text-[11px] font-bold touch-active" style="background: rgba(var(--gold-rgb),0.2); color: var(--gold)">Copy</button>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- ── BOTTOM NAVIGATION TAB BAR (STRICTLY INSIDE HANDSET CONTAINER) ── -->
+    <nav class="sticky bottom-0 left-0 right-0 z-30 flex items-center justify-around px-4 py-2 glass-tab-bar shrink-0">
+      <!-- Recency Tab -->
+      <button id="tab-btn-recency" class="flex flex-col items-center gap-1 text-[10.5px] font-mono text-[var(--gold)] font-bold touch-active">
+        <i class="fa-solid fa-clock-rotate-left text-base"></i>
+        <span>Recency</span>
+      </button>
+
+      <!-- Floating Gold Quick Log Button -->
+      <button id="btn-open-quick-log" class="w-11 h-11 -mt-4 rounded-full gold-glow-btn flex items-center justify-center touch-active shadow-lg" aria-label="Quick Log Check-In">
+        <i class="fa-solid fa-plus text-lg text-[#181412]"></i>
+      </button>
+
+      <!-- Memories Tab -->
+      <button id="tab-btn-memories" class="flex flex-col items-center gap-1 text-[10.5px] font-mono text-[var(--text-tertiary)] touch-active">
+        <i class="fa-solid fa-box-archive text-base"></i>
+        <span>Memories</span>
+      </button>
+
+      <!-- Settings Tab -->
+      <button id="tab-btn-settings" class="flex flex-col items-center gap-1 text-[10.5px] font-mono text-[var(--text-tertiary)] touch-active">
+        <i class="fa-solid fa-sliders text-base"></i>
+        <span>iOS Auto</span>
+      </button>
+    </nav>
+
+    <!-- ── MODAL 1: QUICK LOG SHEET ── -->
+    <div id="modal-quick-log" class="fixed inset-0 z-50 flex items-end justify-center hidden bg-black/60 backdrop-blur-sm transition-opacity">
+      <div class="w-full max-w-[448px] glass-sheet p-5 space-y-4 animate-slide-up">
+        <div class="flex items-center justify-between border-b pb-2" style="border-color: var(--border)">
+          <div>
+            <h3 class="text-[17px] font-bold text-[var(--gold)]" style="font-family: var(--font-header)">Quick Check-In Log</h3>
+            <p class="text-[12px] text-[var(--text-secondary)]">Log a touchpoint to update recency &amp; memories</p>
+          </div>
+          <button id="btn-close-quick-log" class="w-7 h-7 rounded-full flex items-center justify-center text-[var(--text-tertiary)] hover:text-white">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <!-- Contact Select -->
+        <div>
+          <label class="text-[11px] font-mono uppercase tracking-wider text-[var(--text-secondary)] block mb-1">Select Person</label>
+          <div class="flex gap-2 overflow-x-auto pb-1 no-scrollbar" id="quicklog-contacts-chips">
+            <!-- Chips injected dynamically -->
+          </div>
+        </div>
+
+        <!-- Medium Select -->
+        <div>
+          <label class="text-[11px] font-mono uppercase tracking-wider text-[var(--text-secondary)] block mb-1">Medium</label>
+          <div class="grid grid-cols-3 gap-2" id="quicklog-medium-grid">
+            <!-- Mediums injected dynamically -->
+          </div>
+        </div>
+
+        <!-- Note Input -->
+        <div>
+          <label class="text-[11px] font-mono uppercase tracking-wider text-[var(--text-secondary)] block mb-1">What was discussed / memory note</label>
+          <input type="text" id="quicklog-note-input" placeholder="e.g. Discussed weekend plans, job updates..." class="w-full px-3.5 py-2.5 rounded-xl text-[13.5px] outline-none" style="background: var(--bg-input); border: 1px solid var(--border); color: var(--text-primary)">
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="grid grid-cols-2 gap-2 pt-2">
+          <button id="btn-save-quick-log" class="w-full py-3 rounded-xl gold-glow-btn text-[14px] font-bold flex items-center justify-center gap-2 touch-active">
+            <i class="fa-solid fa-paper-plane text-xs"></i>
+            <span>Log Check-In</span>
+          </button>
+
+          <button id="btn-save-and-launch-log" class="w-full py-3 rounded-xl border font-semibold text-[14px] flex items-center justify-center gap-2 touch-active" style="background: var(--bg-elevated); border-color: var(--border-strong); color: var(--gold)">
+            <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
+            <span>Log &amp; Open App</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── MODAL 2: CONTACT FORM SHEET (ADD / EDIT) ── -->
+    <div id="modal-contact-form" class="fixed inset-0 z-50 flex items-end justify-center hidden bg-black/60 backdrop-blur-sm transition-opacity">
+      <div class="w-full max-w-[448px] glass-sheet p-5 space-y-4 max-h-[90vh] overflow-y-auto no-scrollbar">
+        <div class="flex items-center justify-between border-b pb-2" style="border-color: var(--border)">
+          <div>
+            <h3 id="contact-form-title" class="text-[17px] font-bold text-[var(--gold)]" style="font-family: var(--font-header)">Add Person</h3>
+            <p class="text-[12px] text-[var(--text-secondary)]">Set check-in frequency target &amp; memory notes</p>
+          </div>
+          <button id="btn-close-contact-form" class="w-7 h-7 rounded-full flex items-center justify-center text-[var(--text-tertiary)] hover:text-white">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <form id="contact-form" class="space-y-3.5">
+          <input type="hidden" id="contact-form-id">
+
+          <!-- Name -->
+          <div>
+            <label class="text-[11px] font-mono uppercase tracking-wider text-[var(--text-secondary)] block mb-1">Name *</label>
+            <input type="text" id="contact-input-name" required placeholder="e.g. Sarah Connor" class="w-full px-3.5 py-2.5 rounded-xl text-[13.5px] outline-none" style="background: var(--bg-input); border: 1px solid var(--border); color: var(--text-primary)">
+          </div>
+
+          <!-- Category / Group -->
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <label class="text-[11px] font-mono uppercase tracking-wider text-[var(--text-secondary)]">Category / Group</label>
+              <button type="button" id="btn-toggle-add-cat" class="text-[11px] text-[var(--gold)] font-semibold flex items-center gap-1">
+                <i class="fa-solid fa-plus"></i> New Group
+              </button>
+            </div>
+
+            <div id="add-cat-inline-input" class="hidden flex gap-2 mb-2">
+              <input type="text" id="input-new-cat-name" placeholder="Group name..." class="flex-1 px-3 py-1.5 rounded-xl text-[12.5px] outline-none" style="background: var(--bg-input); border: 1px solid var(--border-strong); color: var(--text-primary)">
+              <button type="button" id="btn-submit-new-cat" class="px-3 py-1.5 rounded-xl text-[12px] font-bold" style="background: var(--gold); color: #181412">Add</button>
+            </div>
+
+            <div class="flex gap-2 overflow-x-auto pb-1 no-scrollbar" id="contact-cat-options">
+              <!-- Category option chips injected dynamically -->
+            </div>
+          </div>
+
+          <!-- Phone -->
+          <div>
+            <label class="text-[11px] font-mono uppercase tracking-wider text-[var(--text-secondary)] block mb-1">Phone Number (Optional)</label>
+            <input type="tel" id="contact-input-phone" placeholder="+1 555 0192" class="w-full px-3.5 py-2.5 rounded-xl text-[13.5px] outline-none" style="background: var(--bg-input); border: 1px solid var(--border); color: var(--text-primary)">
+          </div>
+
+          <!-- Target Check-In Frequency -->
+          <div>
+            <label class="text-[11px] font-mono uppercase tracking-wider text-[var(--text-secondary)] block mb-1">Check-In Frequency Target</label>
+            <div class="grid grid-cols-3 gap-2" id="frequency-options-grid">
+              <button type="button" data-freq="Weekly" class="freq-btn py-2 px-2.5 rounded-xl text-[12px] font-semibold border text-center">Weekly</button>
+              <button type="button" data-freq="Monthly" class="freq-btn py-2 px-2.5 rounded-xl text-[12px] font-semibold border text-center">Monthly</button>
+              <button type="button" data-freq="Quarterly" class="freq-btn py-2 px-2.5 rounded-xl text-[12px] font-semibold border text-center">Quarterly</button>
+              <button type="button" data-freq="Yearly" class="freq-btn py-2 px-2.5 rounded-xl text-[12px] font-semibold border text-center">Yearly</button>
+              <button type="button" data-freq="Custom" class="freq-btn py-2 px-2.5 rounded-xl text-[12px] font-semibold border text-center">Custom</button>
+            </div>
+          </div>
+
+          <!-- Memory Notes -->
+          <div>
+            <label class="text-[11px] font-mono uppercase tracking-wider text-[var(--text-secondary)] block mb-1">Important Memory Notes &amp; Facts</label>
+            <textarea id="contact-input-notes" rows="3" placeholder="e.g. Favorite coffee, kids' names, recent life updates..." class="w-full px-3.5 py-2.5 rounded-xl text-[13px] outline-none leading-relaxed" style="background: var(--bg-input); border: 1px solid var(--border); color: var(--text-primary)"></textarea>
+          </div>
+
+          <!-- Submit / Delete -->
+          <div class="pt-2 space-y-2">
+            <button type="submit" class="w-full py-3.5 rounded-xl gold-glow-btn text-[15px] font-bold touch-active">
+              Save Person
+            </button>
+            <button type="button" id="btn-delete-contact" class="w-full py-2.5 rounded-xl bg-red-500/10 text-red-400 text-[13px] font-semibold hidden touch-active">
+              Delete Person
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Application Logic -->
+  <script src="app.js?v=201"></script>
+</body>
 </html>

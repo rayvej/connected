@@ -1,6 +1,6 @@
 {
   "hosting": {
-    "public": "dist",
+    "public": ".",
     "ignore": [
       "firebase.json",
       "**/.*",
@@ -31,27 +31,14 @@
         ]
       },
       {
-        "source": "**/sw.js",
+        "source": "sw.js",
         "headers": [
           {
             "key": "Cache-Control",
             "value": "no-cache, no-store, must-revalidate, max-age=0"
           }
         ]
-      },
-      {
-        "source": "**/*.@(js|css|png|jpg|jpeg|gif|ico|svg|woff2)",
-        "headers": [
-          {
-            "key": "Cache-Control",
-            "value": "max-age=31536000, immutable"
-          }
-        ]
       }
     ]
-  },
-  "firestore": {
-    "rules": "firestore.rules",
-    "indexes": "firestore.indexes.json"
   }
 }

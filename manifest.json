@@ -1,0 +1,32 @@
+{
+  "name": "Connected — Touchpoints & Memory Log",
+  "short_name": "Connected",
+  "description": "Intimate relationship tracker and memory log for iOS",
+  "theme_color": "#181412",
+  "background_color": "#181412",
+  "display": "standalone",
+  "orientation": "portrait",
+  "scope": "./",
+  "start_url": "./",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "share_target": {
+    "action": "./?quicklog=true",
+    "method": "GET",
+    "params": {
+      "title": "contact",
+      "text": "summary",
+      "url": "url"
+    }
+  }
+}

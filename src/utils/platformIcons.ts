@@ -1,4 +1,4 @@
-import { Platform } from '../db/schema';
+import type { Platform } from '../db/schema';
 
 export interface PlatformConfig {
   name: Platform;

@@ -1,4 +1,4 @@
-import { Contact, LogEntry, Platform, InteractionType } from './schema';
+import type { Contact, LogEntry, Platform, InteractionType } from './schema';
 
 const STORAGE_KEY_CONTACTS = 'connected_pwa_contacts_v1';
 const STORAGE_KEY_LOGS = 'connected_pwa_logs_v1';

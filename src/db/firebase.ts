@@ -8,8 +8,7 @@ import {
 import { 
   initializeFirestore, 
   persistentLocalCache, 
-  persistentMultipleTabManager,
-  getFirestore 
+  persistentMultipleTabManager 
 } from 'firebase/firestore';
 
 // Environment variables or safe fallback configuration

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Contact, LogEntry, Platform, InteractionType } from './db/schema';
+import type { Contact, LogEntry, Platform, InteractionType } from './db/schema';
 import { StorageService } from './db/storageService';
 import { HeaderBlur } from './components/common/HeaderBlur';
-import { TabBar, TabType } from './components/layout/TabBar';
+import { TabBar, type TabType } from './components/layout/TabBar';
 import { NudgeBanner } from './components/dashboard/NudgeBanner';
 import { ContactCard } from './components/dashboard/ContactCard';
 import { LogTimeline } from './components/logs/LogTimeline';

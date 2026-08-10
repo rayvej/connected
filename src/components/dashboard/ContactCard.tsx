@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { Contact, Platform } from '../../db/schema';
+import type { Contact, Platform } from '../../db/schema';
 import { RecencyRing } from '../common/RecencyRing';
 import { RecencyBadge } from '../common/RecencyBadge';
-import { getPlatformBadgeStyle, launchPlatformApp } from '../../utils/platformIcons';
-import { MessageCircle, Phone, Clock, ChevronRight } from 'lucide-react';
+import { getPlatformBadgeStyle } from '../../utils/platformIcons';
+import { MessageCircle, Phone, ChevronRight } from 'lucide-react';
 import '../../styles/glass.css';
 
 interface ContactCardProps {

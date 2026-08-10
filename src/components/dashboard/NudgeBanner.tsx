@@ -1,6 +1,7 @@
 import React from 'react';
-import { Contact, calculateRecencyStatus } from '../../db/schema';
-import { Sparkles, Phone, MessageSquare } from 'lucide-react';
+import type { Contact } from '../../db/schema';
+import { calculateRecencyStatus } from '../../db/schema';
+import { Sparkles, MessageSquare } from 'lucide-react';
 import '../../styles/glass.css';
 
 interface NudgeBannerProps {
